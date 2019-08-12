@@ -1,0 +1,15 @@
+from .cluster import Cluster
+
+class Everything:
+    def __init__(self, raw):
+        self.cluster = Cluster(raw["cluster"])
+        self.changelog = [Change(log) for log in raw["changelog"]]
+        self.comments = raw.get("comments")  # str
+
+
+class Change:
+    def __init__(self, raw):
+        self.comments = raw.get("comments")  # list[str]
+        self.mibig_version = raw.get("version")
+        for part in self.mibig_version.split("."):
+            int(part)

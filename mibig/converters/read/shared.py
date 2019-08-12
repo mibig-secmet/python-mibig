@@ -1,0 +1,15 @@
+class Thioesterase:
+    def __init__(self, raw):
+        self.gene = raw.get("gene")  # str
+        self.thioesterase_type = raw.get("thioesterase_type")  # str
+        assert self.thioesterase_type in {None, "Unknown", "Type II", "Type I"}
+
+class NonCanonical:
+    EVIDENCE = {"Sequence-based prediction", "Structure-based inference", "Activity assay"}
+
+    def __init__(self, raw):
+        self.evidence = raw.get("evidence")
+        assert self.evidence is None or not set(self.evidence).difference(self.EVIDENCE)
+        self.iterated = raw.get("iterated")  # bool
+        self.non_elongating = raw.get("non_elongating")  # bool
+        self.skipped = raw.get("skipped")  # bool
