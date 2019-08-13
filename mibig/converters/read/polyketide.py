@@ -8,7 +8,7 @@ class Polyketide:
         self.release_type = raw.get("release_type")  # list[str]
         self.starter_unit = raw.get("starter_unit")  # list[str]
         self.subclasses = raw.get("subclasses")  # list[str]
-        self.synthases = [Synthase(syn) for syn in raw.get("synthases", [])] or None
+        self.synthases = [Synthase(syn) for syn in raw.get("synthases", [])] or []
 
 
 class Synthase:
