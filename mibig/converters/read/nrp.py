@@ -6,8 +6,6 @@ class NRP:
         self.cyclic = raw.get("cyclic")  # str
         self.lipid_moiety = raw.get("lipid_moiety")  # str
         self.nrps_genes = [NRPSGene(gene) for gene in raw.get("nrps_genes", [])] or None
-        if not self.nrps_genes:
-            raise ValueError("abbeaf")
         self.release_type = raw.get("release_type")  # str
         self.subclass = raw.get("subclass")  # str
         self.thioesterases = [Thioesterase(te) for te in raw.get("thioesterases", [])] or None
