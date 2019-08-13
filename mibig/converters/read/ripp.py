@@ -3,6 +3,7 @@ class RiPP:
         self.cyclic = raw.get("cyclic")  # bool
         self.peptidases = raw.get("peptidases")  # list[str]
         self.precursor_genes = [PrecursorGene(pg) for pg in raw.get("precursor_genes", [])] or None
+        self.subclass = raw.get("subclass") # str
         if "precursor_genes" in raw:
             assert self.precursor_genes
 
