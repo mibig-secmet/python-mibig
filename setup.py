@@ -44,7 +44,7 @@ setup(
     long_description_content_type='text/markdown',
     install_requires=install_requires,
     tests_require=tests_require,
-    packages=['mibig'],
+    packages=['mibig', 'mibig.converters', 'mibig.converters.read', 'mibig.converters.to'],
     url='https://github.com/mibig-secmet/python-mibig',
     license='GNU Affero General Public License v3 or later (AGPLv3+)',
     classifiers=[
