@@ -1,3 +1,5 @@
+import re
+
 from .alkaloid import Alkaloid
 from .other import Other
 from .polyketide import Polyketide
@@ -168,7 +170,28 @@ class Compound:
         self.evidence = raw.get("evidence", [])                                   # list[str]
         self.mass_spec_ion_type = raw.get("mass_spec_ion_type")                   # str
         self.mol_mass = raw.get("mol_mass")                                       # number
-        self.molecular_formula = raw.get("molecular_formula")                    # str
+        self.molecular_formula = MolecularFormula(raw.get("molecular_formula"))
+
+
+FORMULA_PARTS_PATTERN = re.compile(r"([A-Z][a-z]?)([0-9]*)")
+
+
+class MolecularFormula:
+    def __init__(self, raw):
+        self.raw = raw
+        self.parts = []  # type: List[FormulaPart]
+
+        parts = FORMULA_PARTS_PATTERN.findall(raw)
+        for atom, count in parts:
+            if not count:
+                count = '1'
+            self.parts.append(FormulaPart(atom, int(count)))
+
+
+class FormulaPart:
+    def __init__(self, atom: str, count: int) -> None:
+        self.atom = atom
+        self.count = count
 
 
 class ChemTarget:
