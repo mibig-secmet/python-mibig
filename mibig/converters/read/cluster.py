@@ -60,6 +60,18 @@ class GeneAnnotation:
         self.publications = raw.get("publications", [])  # list[str]
         self.tailoring = raw.get("tailoring", [])  # list[str]
 
+    def to_json(self):
+        return {
+            "id": self.id,
+            "comments": self.comments,
+            "functions": [gf.to_json() for gf in self.functions],
+            "mut_pheno": self.mutation_phenotype,
+            "name": self.name,
+            "product": self.product,
+            "publications": self.publications,
+            "tailoring": self.tailoring,
+        }
+
 
 class GeneFunction:
     EVIDENCE = {"Sequence-based prediction", "Other in vivo study", "Heterologous expression", "Knock-out", "Activity assay"}
@@ -69,6 +81,9 @@ class GeneFunction:
         self.evidence = raw["evidence"]  # list[str]
         assert not set(self.evidence).difference(self.EVIDENCE)
 
+    def to_json(self):
+        return {"category": self.category, "evidence": self.evidence}
+
 
 class ExtraGene:
     def __init__(self, raw):
@@ -76,6 +91,12 @@ class ExtraGene:
 
         self.location = Location(raw.get("location")) if "location" in raw else None
         self.translation = raw.get("translation")
+
+    def to_json(self):
+        return {
+            "location": self.location.to_json() if self.location else None,
+            "translation": self.translation,
+        }
 
 
 class Location:
@@ -85,11 +106,20 @@ class Location:
         self.strand = raw["strand"]
         assert self.strand in [-1, 1]
 
+    def to_json(self):
+        return {
+            "exons": [exon.to_json() for exon in self.exons],
+            "strand": self.strand,
+        }
+
 
 class Exon:
     def __init__(self, raw):
         self.start = raw["start"]
         self.end = raw["end"]
+
+    def to_json(self):
+        return {"start": self.start, "end": self.end}
 
 
 class Operon:
