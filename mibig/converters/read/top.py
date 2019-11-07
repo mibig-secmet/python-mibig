@@ -10,6 +10,7 @@ class Everything:
 class Change:
     def __init__(self, raw):
         self.comments = raw.get("comments")  # list[str]
+        self.contributors = raw.get("contributors")  # list[str]
         self.mibig_version = raw.get("version")
         for part in self.mibig_version.split("."):
             int(part)
