@@ -7,6 +7,11 @@ class RiPP:
         if "precursor_genes" in raw:
             assert self.precursor_genes
 
+    def __str__(self):
+        if not self.subclass:
+            return "RiPP"
+        return "RiPP ({})".format(self.subclass)
+
 
 class PrecursorGene:
     def __init__(self, raw):

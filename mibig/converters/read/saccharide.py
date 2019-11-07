@@ -6,6 +6,11 @@ class Saccharide:
         if self.sugar_subclusters is not None:
             assert self.sugar_subclusters
 
+    def __str__(self):
+        if not self.subclass:
+            return "Saccharide"
+        return "Saccharide ({})".format(self.subclass)
+
 
 class GlycosylTransferase:
     EVIDENCE = {"Sequence-based prediction", "Structure-based inference", "Knock-out construct", "Activity assay"}

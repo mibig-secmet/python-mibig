@@ -10,6 +10,12 @@ class NRP:
         self.subclass = raw.get("subclass")  # str
         self.thioesterases = [Thioesterase(te) for te in raw.get("thioesterases", [])] or None
 
+    def __str__(self):
+        if not self.subclass:
+            return "NRP"
+        return "NRP ({})".format(self.subclass)
+
+
 
 class NRPSGene:
     def __init__(self, raw):
@@ -44,3 +50,6 @@ class Specificity:
         self.non_proteinogenic = raw.get("nonproteinogenic")  # list[str]
         self.proteinogenic = raw.get("proteinogenic")  # list[str]
         assert self.proteinogenic is None or not set(self.proteinogenic).difference(self.LOADED)
+
+    def __str__(self):
+        return " / ".join(self.proteinogenic + self.non_proteinogenic)

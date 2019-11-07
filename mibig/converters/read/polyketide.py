@@ -10,6 +10,11 @@ class Polyketide:
         self.subclasses = raw.get("subclasses")  # list[str]
         self.synthases = [Synthase(syn) for syn in raw.get("synthases", [])] or []
 
+    def __str__(self):
+        if not self.subclasses:
+            return "Polyketide"
+        return "Polyketide ({})".format(", ".join(self.subclasses))
+
 
 class Synthase:
     def __init__(self, raw):
