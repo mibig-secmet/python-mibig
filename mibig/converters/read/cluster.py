@@ -43,9 +43,9 @@ class Cluster:
 
 class Genes:
     def __init__(self, raw):
-        self.annotations = [GeneAnnotation(ann) for ann in raw.get("annotations", [])] or None
-        self.extra_genes = [ExtraGene(gene) for gene in raw.get("extra_genes", [])] or None
-        self.operons = [Operon(op) for op in raw.get("operons", [])] or None
+        self.annotations = [GeneAnnotation(ann) for ann in raw.get("annotations", [])] or []
+        self.extra_genes = [ExtraGene(gene) for gene in raw.get("extra_genes", [])] or []
+        self.operons = [Operon(op) for op in raw.get("operons", [])] or []
 
 
 class GeneAnnotation:
@@ -53,12 +53,12 @@ class GeneAnnotation:
         self.id = raw["id"]  # str
 
         self.comments = raw.get("comments")  # str
-        self.functions = [GeneFunction(gf) for gf in raw.get("functions", [])] or None
+        self.functions = [GeneFunction(gf) for gf in raw.get("functions", [])] or []
         self.mutation_phenotype = raw.get("mut_pheno")  # str
         self.name = raw.get("name")  # str
         self.product = raw.get("product")  # str
-        self.publications = raw.get("publications")  # list[str]
-        self.tailoring = raw.get("tailoring")  # list[str]
+        self.publications = raw.get("publications", [])  # list[str]
+        self.tailoring = raw.get("tailoring", [])  # list[str]
 
 
 class GeneFunction:
@@ -127,16 +127,16 @@ class Publication:
 class Compound:
     def __init__(self, raw):
         self.chem_acts = raw.get("chem_acts")                                     # list[str]
-        self.chem_moieties = [Moiety(mo) for mo in raw.get("chem_moieties", [])] or None
+        self.chem_moieties = [Moiety(mo) for mo in raw.get("chem_moieties", [])] or []
         self.chem_struct = raw.get("chem_struct")                                 # str
-        self.chem_synonym = raw.get("chem_synonyms")                              # list[str]
-        self.chem_targets = [ChemTarget(target) for target in raw.get("chem_targets", [])] or None
+        self.chem_synonyms = raw.get("chem_synonyms", [])                         # list[str]
+        self.chem_targets = [ChemTarget(target) for target in raw.get("chem_targets", [])] or []
         self.compound = raw["compound"]                                           # str
-        self.database_id = [DatabaseID(dbid) for dbid in raw.get("database_id", [])] or None
-        self.evidence = raw.get("evidence")                                       # list[str]
+        self.database_id = [DatabaseID(dbid) for dbid in raw.get("database_id", [])] or []
+        self.evidence = raw.get("evidence", [])                                   # list[str]
         self.mass_spec_ion_type = raw.get("mass_spec_ion_type")                   # str
-        self.mol_mass = raw.get("mol_mass")                                           # number
-        self.molecular_formula = raw.get("molecular_formula")                         # str
+        self.mol_mass = raw.get("mol_mass")                                       # number
+        self.molecular_formula = raw.get("molecular_formula")                    # str
 
 
 class ChemTarget:
