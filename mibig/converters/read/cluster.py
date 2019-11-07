@@ -149,9 +149,11 @@ class Loci:
 
 class Publication:
     def __init__(self, raw):
-        assert raw.split(":")[0] in {"pubmed", "doi", "patent", "url"}
         assert not raw.endswith(":")
-        self.text = raw
+        category, content = raw.split(":", 1)
+        assert category in {"pubmed", "doi", "patent", "url"}
+        self.category = category
+        self.content = content
 
 
 class Compound:
