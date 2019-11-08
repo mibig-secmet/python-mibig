@@ -42,6 +42,8 @@ class Iterative:
         assert self.evidence is None or self.evidence in self.EVIDENCE
         self.genes = raw.get("genes")  # list str
 
+        self.nr_iterations = raw.get("nr_iterations")
+
 
 class PKSModule:
     EVIDENCE = {"Sequence-based prediction", "Structure-based inference", "Feeding study", "Activity assay"}
