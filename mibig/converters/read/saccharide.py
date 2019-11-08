@@ -1,10 +1,8 @@
 class Saccharide:
     def __init__(self, raw):
-        self.glycosyl_transferases = [GlycosylTransferase(gt) for gt in raw.get("glycosyltransferases", [])] or None
+        self.glycosyltransferases = [GlycosylTransferase(gt) for gt in raw.get("glycosyltransferases", [])] or []
         self.subclass = raw.get("subclass")  # str
-        self.sugar_subclusters = raw.get("sugar_subclusters")  # list[str]
-        if self.sugar_subclusters is not None:
-            assert self.sugar_subclusters
+        self.sugar_subclusters = raw.get("sugar_subclusters", [])  # list[str]
 
     def __str__(self):
         if not self.subclass:
