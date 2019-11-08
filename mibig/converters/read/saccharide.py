@@ -17,4 +17,9 @@ class GlycosylTransferase:
         assert self.evidence is not None and not set(self.evidence).difference(self.EVIDENCE)
         self.gene_id = raw["gene_id"]  # str
         self.specificity = raw["specificity"]  # str
-        
+
+    @property
+    def specificity_pretty(self):
+        if self.specificity == "Unknown":
+            return ""
+        return self.specificity
