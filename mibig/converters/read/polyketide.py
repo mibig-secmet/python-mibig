@@ -7,7 +7,7 @@ class Polyketide:
         self.ketide_length = raw.get("ketide_length")  # int
         self.release_type = raw.get("release_type")  # list[str]
         self.starter_unit = raw.get("starter_unit")  # list[str]
-        self.subclasses = raw.get("subclasses")  # list[str]
+        self.subclasses = raw.get("subclasses", [])  # list[str]
         self.synthases = [Synthase(syn) for syn in raw.get("synthases", [])] or []
 
     def __str__(self):
@@ -22,10 +22,10 @@ class Synthase:
         assert self.genes
 
         self.iterative = Iterative(raw["iterative"]) if "iterative" in raw else None
-        self.modules = [PKSModule(mod) for mod in raw.get("modules", [])] or None
+        self.modules = [PKSModule(mod) for mod in raw.get("modules", [])] or []
         self.pufa_modification_domains = raw.get("pufa_modification_domains")  # list[str]
-        self.subclass = raw.get("subclass")  # list[str]  TODO: should be subclasses in out
-        self.thioesterases = [Thioesterase(te) for te in raw.get("thioesterases", [])] or None
+        self.subclass = raw.get("subclass", [])  # list[str]  TODO: should be subclasses in out
+        self.thioesterases = [Thioesterase(te) for te in raw.get("thioesterases", [])] or []
         self.trans_at = TransAT(raw.get("trans_at")) if "trans_at" in raw else None
 
 
