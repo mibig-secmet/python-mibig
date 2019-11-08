@@ -182,6 +182,9 @@ class MolecularFormula:
         self.raw = raw
         self.parts = []  # type: List[FormulaPart]
 
+        if not raw:
+            return
+
         parts = FORMULA_PARTS_PATTERN.findall(raw)
         for atom, count in parts:
             if not count:
