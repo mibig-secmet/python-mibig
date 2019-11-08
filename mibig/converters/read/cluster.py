@@ -6,6 +6,7 @@ from .polyketide import Polyketide
 from .nrp import NRP
 from .ripp import RiPP
 from .saccharide import Saccharide
+from .terpene import Terpene
 
 
 BIOSYNTHETIC_CLASSES = {"Alkaloid", "Polyketide", "RiPP", "NRP", "Saccharide", "Terpene", "Other"}
@@ -37,7 +38,7 @@ class Cluster:
         self.genes = Genes(raw.get("genes")) if "genes" in raw else None
         self.ripp = RiPP(raw.get("ripp")) if "ripp" in raw else None
         self.saccharide = Saccharide(raw.get("saccharide")) if "saccharide" in raw else None
-        self.terpene = Saccharide(raw.get("terpene")) if "terpene" in raw else None
+        self.terpene = Terpene(raw.get("terpene")) if "terpene" in raw else None
 
         if not self.minimal:
             assert self.loci and self.loci.evidence
