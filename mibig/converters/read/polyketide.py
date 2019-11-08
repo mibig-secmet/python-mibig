@@ -64,6 +64,18 @@ class PKSModule:
         self.non_canonical = NonCanonical(raw.get("non_canonical")) if "non_canonical" in raw else None
         self.modification_domains = raw.get("pks_mod_doms")  # list[str]
 
+    @property
+    def at_specificities_pretty(self):
+        if self.at_specificities == ["Unknown"]:
+            return []
+        return self.at_specificities
+
+    @property
+    def kr_stereochem_pretty(self):
+        if self.kr_stereochem == "Unknown":
+            return None
+        return self.kr_stereochem
+
 
 class TransAT:
     def __init__(self, raw):
