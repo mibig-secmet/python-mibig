@@ -213,8 +213,7 @@ class Moiety:
 class DatabaseID:
     def __init__(self, raw):
         db, ref = raw.split(":", 1)
-        assert db in {"pubchem", "chebi", "chembl", "chemspider", "npatlas"}
-        int(ref)
+        assert db in {"pubchem", "chebi", "chembl", "chemspider", "npatlas", "lotus"}
         self.text = raw                                                            # str
         self.db = db
         self.reference = ref
