@@ -1,4 +1,8 @@
 import re
+try:
+    from typing import List
+except ImportError:
+    pass
 
 from .alkaloid import Alkaloid
 from .other import Other
@@ -29,6 +33,7 @@ class Cluster:
         self.organism_name = raw["organism_name"]  # str
         self.ncbi_tax_id = raw["ncbi_tax_id"]  # str
         self.minimal = raw["minimal"]  # bool
+        self.status = raw["status"]  # str
 
         self.alkaloid = Alkaloid(raw.get("alkaloid")) if "alkaloid" in raw else None
         self.polyketide = Polyketide(raw.get("polyketide")) if "polyketide" in raw else None
@@ -39,6 +44,18 @@ class Cluster:
         self.ripp = RiPP(raw.get("ripp")) if "ripp" in raw else None
         self.saccharide = Saccharide(raw.get("saccharide")) if "saccharide" in raw else None
         self.terpene = Terpene(raw.get("terpene")) if "terpene" in raw else None
+
+        self.retirement_reasons = raw.get(
+            "retirement_reasons") if "retirement_reasons" in raw else None  # List[str]
+        self.see_also = raw.get("see_also") if "see_also" in raw else None  # List[str]
+
+        assert self.status in ("pending", "active", "retired")
+        if self.status == "active":
+            assert len(self.publications)
+        if self.status == "retired":
+            assert self.retirement_reasons
+        else:
+            assert not self.retirement_reasons and not self.see_also
 
         if not self.minimal:
             assert self.loci and self.loci.evidence
