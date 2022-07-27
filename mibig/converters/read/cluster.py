@@ -28,8 +28,7 @@ class Cluster:
         assert int(self.mibig_accession[3:]) > 0
         self.compounds = [Compound(comp) for comp in raw["compounds"]]
         assert self.compounds
-        self.publications = [Publication(pub) for pub in raw["publications"]]
-        assert self.publications
+        self.publications = [Publication(pub) for pub in raw.get("publications", [])]
         self.organism_name = raw["organism_name"]  # str
         self.ncbi_tax_id = raw["ncbi_tax_id"]  # str
         self.minimal = raw["minimal"]  # bool
