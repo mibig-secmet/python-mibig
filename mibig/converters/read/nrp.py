@@ -72,9 +72,9 @@ class Specificity:
 
 
 class NRPSSubstrate:
-    LOADED = {"Alanine", "Arginine", "Glutamate", "Serine", "Tryptophan", "Methionine", "Threonine",
-              "Glycine", "Isoleucine", "Proline", "Glutamine", "Tyrosine", "Phenylalanine",
-              "Cysteine", "Histidine", "Leucine", "Lysine", "Valine", "Asparagine", "Aspartate"}
+    LOADED = {"Alanine", "Arginine", "Asparagine", "Aspartic acid", "Cysteine", "Glutamic acid",
+              "Glutamine", "Glycine", "Histidine", "Isoleucine", "Leucine", "Lysine", "Methionine",
+              "Phenylalanine", "Proline", "Serine", "Threonine", "Tryptophan", "Tyrosine", "Valine"}
 
     def __init__(self, raw):
         self.name: str = raw.get("name")
