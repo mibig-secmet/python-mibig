@@ -4,6 +4,7 @@ try:
 except ImportError:
     pass
 
+from .shared import Publication
 from .alkaloid import Alkaloid
 from .other import Other
 from .polyketide import Polyketide
@@ -76,7 +77,8 @@ class GeneAnnotation:
         self.mutation_phenotype = raw.get("mut_pheno")  # str
         self.name = raw.get("name")  # str
         self.product = raw.get("product")  # str
-        self.publications = raw.get("publications", [])  # list[str]
+        self.publications: List[Publication] = [
+            Publication(pub) for pub in raw.get("publications", [])] or []
         self.tailoring = raw.get("tailoring", [])  # list[str]
 
     def to_json(self):
@@ -93,7 +95,8 @@ class GeneAnnotation:
 
 
 class GeneFunction:
-    EVIDENCE = {"Sequence-based prediction", "Other in vivo study", "Heterologous expression", "Knock-out", "Activity assay"}
+    EVIDENCE = {"Sequence-based prediction", "Other in vivo study",
+                "Heterologous expression", "Knock-out", "Activity assay"}
 
     def __init__(self, raw):
         self.category = raw["category"]  # str
@@ -152,7 +155,8 @@ class Operon:
 
 
 class Loci:
-    EVIDENCE = {"Sequence-based prediction", "Gene expression correlated with compound production", "Knock-out studies", "Enzymatic assays", "Heterologous expression"}
+    EVIDENCE = {"Sequence-based prediction", "Gene expression correlated with compound production",
+                "Knock-out studies", "Enzymatic assays", "Heterologous expression"}
 
     def __init__(self, raw):
         self.accession = raw["accession"]  # str
@@ -164,15 +168,6 @@ class Loci:
         self.mixs_compliant = raw.get("mixs_compliant")  # bool
         self.evidence = raw.get("evidence")  # list[str]
         assert self.evidence is None or not set(self.evidence).difference(self.EVIDENCE)
-
-
-class Publication:
-    def __init__(self, raw):
-        assert not raw.endswith(":")
-        category, content = raw.split(":", 1)
-        assert category in {"pubmed", "doi", "patent", "url"}
-        self.category = category
-        self.content = content
 
 
 class Compound:
@@ -216,7 +211,8 @@ class FormulaPart:
 
 class ChemTarget:
     def __init__(self, raw):
-        self.publications = raw.get("publications")  # list[str]
+        self.publications: List[Publication] = [
+            Publication(pub) for pub in raw.get("publications", [])] or []
         self.target = raw.get("target")              # str
 
 
