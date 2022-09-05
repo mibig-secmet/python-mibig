@@ -58,7 +58,7 @@ class Cluster:
             assert not self.retirement_reasons
 
         if not self.minimal:
-            assert self.loci and self.loci.evidence
+            assert self.loci
 
 
 class Genes:
