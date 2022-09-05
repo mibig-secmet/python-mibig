@@ -55,7 +55,7 @@ class Cluster:
         if self.status == "retired":
             assert self.retirement_reasons
         else:
-            assert not self.retirement_reasons and not self.see_also
+            assert not self.retirement_reasons
 
         if not self.minimal:
             assert self.loci and self.loci.evidence
