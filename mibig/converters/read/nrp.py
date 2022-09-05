@@ -40,25 +40,49 @@ class NRPSModule:
             raw.get("non_canonical")) if "non_canonical" in raw else None
 
 
-SUBSTRATE_EVIDENCE = {
-    "Activity assay",
-    "ACVS assay",
-    "ATP-PPi exchange assay",
-    "Feeding study",
-    "Heterologous expression",
-    "Homology",
-    "In-vitro experiments",
-    "Knock-out studies",
-    "Mass spectrometry",
-    "Radio labelling",
-    "Sequence-based prediction",
-    "Steady-state kinetics",
-    "Structure-based inference",
-    "X-ray crystallography"
-}
-
-
 class Specificity:
+    EVIDENCE = {
+        "Activity assay",
+        "ACVS assay",
+        "ATP-PPi exchange assay",
+        "Enzyme-coupled assay",
+        "Feeding study",
+        "Heterologous expression",
+        "Homology",
+        "HPLC",
+        "In-vitro experiments",
+        "Knock-out studies",
+        "Mass spectrometry",
+        "NMR",
+        "Radio labelling",
+        "Sequence-based prediction",
+        "Steady-state kinetics",
+        "Structure-based inference",
+        "X-ray crystallography",
+    }
+    LOADED = {
+        "alanine",
+        "arginine",
+        "asparagine",
+        "aspartic acid",
+        "cysteine",
+        "glutamic acid",
+        "glutamine",
+        "glycine",
+        "histidine",
+        "isoleucine",
+        "leucine",
+        "lysine",
+        "methionine",
+        "phenylalanine",
+        "proline",
+        "serine",
+        "threonine",
+        "tryptophan",
+        "tyrosine",
+        "valine",
+    }
+
     def __init__(self, raw):
         self.subcluster = raw.get("aa_subcluster", [])  # list[str]
         self.epimerized = raw.get("epimerized")  # bool
