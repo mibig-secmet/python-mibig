@@ -81,6 +81,10 @@ class GeneAnnotation:
             Publication(pub) for pub in raw.get("publications", [])] or []
         self.tailoring = raw.get("tailoring", [])  # list[str]
 
+    def __str__(self):
+        import json
+        return json.dumps(self.to_json())
+
     def to_json(self):
         return {
             "id": self.id,
