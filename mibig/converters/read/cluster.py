@@ -159,8 +159,8 @@ class Operon:
 
 
 class Loci:
-    EVIDENCE = {"Sequence-based prediction", "Gene expression correlated with compound production",
-                "Knock-out studies", "Enzymatic assays", "Heterologous expression"}
+    EVIDENCE = {"Gene expression correlated with compound production",
+                "Knock-out studies", "Enzymatic assays", "Heterologous expression", "In vitro expression"}
 
     def __init__(self, raw):
         self.accession = raw["accession"]  # str
@@ -171,7 +171,7 @@ class Loci:
         assert self.end is None or self.end >= 2
         self.mixs_compliant = raw.get("mixs_compliant")  # bool
         self.evidence = raw.get("evidence")  # list[str]
-        assert self.evidence is None or not set(self.evidence).difference(self.EVIDENCE)
+        assert self.evidence is None or not set(self.evidence).difference(self.EVIDENCE), set(self.evidence).difference(self.EVIDENCE)
 
 
 class Compound:
