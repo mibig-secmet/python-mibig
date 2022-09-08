@@ -60,6 +60,21 @@ class Specificity:
         "Structure-based inference",
         "X-ray crystallography",
     }
+
+
+    def __init__(self, raw):
+        self.subcluster = raw.get("aa_subcluster", [])  # list[str]
+        self.epimerized = raw.get("epimerized")  # bool
+        self.evidence = raw.get("evidence", [])  # list[str]
+        assert self.evidence is None or not set(self.evidence).difference(self.EVIDENCE)
+        self.publications = [Publication(pub) for pub in raw.get("publications", [])] or []
+        self.substrates = [NRPSSubstrate(sub) for sub in raw.get("substrates", [])] or []
+
+    def __str__(self):
+        return " / ".join([sub.name for sub in self.substrates])
+
+
+class NRPSSubstrate:
     LOADED = {
         "alanine",
         "arginine",
@@ -82,24 +97,6 @@ class Specificity:
         "tyrosine",
         "valine",
     }
-
-    def __init__(self, raw):
-        self.subcluster = raw.get("aa_subcluster", [])  # list[str]
-        self.epimerized = raw.get("epimerized")  # bool
-        self.evidence = raw.get("evidence", [])  # list[str]
-        assert self.evidence is None or not set(self.evidence).difference(SUBSTRATE_EVIDENCE)
-        self.publications = [Publication(pub) for pub in raw.get("publications", [])] or []
-        self.substrates = [NRPSSubstrate(sub) for sub in raw.get("substrates", [])] or []
-
-    def __str__(self):
-        return " / ".join([sub.name for sub in self.substrates])
-
-
-class NRPSSubstrate:
-    LOADED = {"Alanine", "Arginine", "Asparagine", "Aspartic acid", "Cysteine", "Glutamic acid",
-              "Glutamine", "Glycine", "Histidine", "Isoleucine", "Leucine", "Lysine", "Methionine",
-              "Phenylalanine", "Proline", "Serine", "Threonine", "Tryptophan", "Tyrosine", "Valine"}
-
     def __init__(self, raw):
         self.name: str = raw.get("name")
         self.proteinogenic: bool = raw.get("proteinogenic")
@@ -113,7 +110,7 @@ class NRPSSubstrate:
 class IntegratedMonomer:
     def __init__(self, raw):
         self.evidence: List[str] = raw.get("evidence", [])
-        assert self.evidence is None or not set(self.evidence).difference(SUBSTRATE_EVIDENCE)
+        assert self.evidence is None or not set(self.evidence).difference(Specificity.EVIDENCE)
         self.name: str = raw.get("name")
         self.publications: List[Publication] = [Publication(pub)
                                                 for pub in raw.get("publications", [])] or []
