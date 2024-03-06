@@ -1,6 +1,6 @@
 import os
 import sys
-from setuptools import setup
+from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
 short_description = "Python classes to handle MIBiG data"
@@ -44,7 +44,7 @@ setup(
     long_description_content_type='text/markdown',
     install_requires=install_requires,
     tests_require=tests_require,
-    packages=['mibig', 'mibig.converters', 'mibig.converters.read', 'mibig.converters.to'],
+    packages=find_packages(include=["mibig", "mibig.*"]),
     url='https://github.com/mibig-secmet/python-mibig',
     license='GNU Affero General Public License v3 or later (AGPLv3+)',
     classifiers=[
