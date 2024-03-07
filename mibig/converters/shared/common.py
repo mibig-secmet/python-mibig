@@ -158,13 +158,31 @@ class ReleaseEntry:
     def validate(self) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
         if not self.contributors:
-            errors.append(ValidationErrorInfo("contributors", "contributor list cannot be empty"))
+            errors.append(
+                ValidationErrorInfo("contributors", "contributor list cannot be empty")
+            )
         for contributor in self.contributors:
             errors.extend(contributor.validate())
         for reviewer in self.reviewers:
             errors.extend(reviewer.validate())
 
         return errors
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "contributors": [c.to_json() for c in self.contributors],
+            "reviewers": [r.to_json() for r in self.reviewers],
+            "date": self.date.strftime("%Y-%m-%d"),
+            "comment": self.comment,
+        }
+
+    @classmethod
+    def from_json(cls, raw: dict[str, Any]) -> Self:
+        contributors = [SubmitterID.from_json(c) for c in raw.get("contributors", [])]
+        reviewers = [SubmitterID.from_json(r) for r in raw.get("reviewers", [])]
+        date = datetime.datetime.strptime(raw["date"], "%Y-%m-%d")
+        comment = raw["comment"]
+        return cls(contributors, reviewers, date, comment)
 
 
 class ReleaseVersion:
@@ -193,13 +211,83 @@ class ReleaseVersion:
                 ]
         return []
 
+    def to_json(self) -> str:
+        return self._inner
+
+    @classmethod
+    def from_json(cls, raw: str) -> Self:
+        return cls(raw)
+
 
 class Release:
     version: ReleaseVersion
     date: datetime.date
     entries: list[ReleaseEntry]
 
-    def __init__(self, version: ReleaseVersion, date: datetime.date, entries: list[ReleaseEntry], validate: bool = True) -> None:
+    def __init__(
+        self,
+        version: ReleaseVersion,
+        date: datetime.date,
+        entries: list[ReleaseEntry],
+        validate: bool = True,
+    ) -> None:
         self.version = version
         self.date = date
         self.entries = entries
+
+        if not validate:
+            return
+
+    def validate(self) -> list[ValidationErrorInfo]:
+        errors: list[ValidationErrorInfo] = []
+
+        errors.extend(self.version.validate())
+        for entry in self.entries:
+            errors.extend(entry.validate())
+
+        return errors
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "version": self.version.to_json(),
+            "date": self.date.strftime("%Y-%m-%d"),
+            "entries": [e.to_json() for e in self.entries],
+        }
+
+    @classmethod
+    def from_json(cls, raw: dict[str, Any]) -> Self:
+        version = ReleaseVersion.from_json(raw["version"])
+        date = datetime.datetime.strptime(raw["date"], "%Y-%m-%d")
+        entries = [ReleaseEntry.from_json(e) for e in raw["entries"]]
+
+        return cls(version, date, entries)
+
+
+class ChangeLog:
+    releases: list[Release]
+
+    def __init__(self, releases: list[Release], validate: bool = True) -> None:
+        self.releases = releases
+
+        if not validate:
+            return
+
+        errors = self.validate()
+        if errors:
+            raise ValidationError(errors)
+
+    def validate(self) -> list[ValidationErrorInfo]:
+        errors: list[ValidationErrorInfo] = []
+
+        for release in self.releases:
+            errors.extend(release.validate())
+
+        return errors
+
+    def to_json(self) -> dict[str, Any]:
+        return {"releases": [r.to_json() for r in self.releases]}
+
+    @classmethod
+    def from_json(cls, raw: dict[str, Any]) -> Self:
+        releases = [Release.from_json(r) for r in raw["releases"]]
+        return cls(releases)

@@ -106,3 +106,57 @@ class TestReleaseEntry(unittest.TestCase):
             date.today(),
             "Test comment",
         )
+
+
+class TestRelease(unittest.TestCase):
+    def test_init(self):
+        common.Release(
+            common.ReleaseVersion("next"),
+            date.today(),
+            [
+                common.ReleaseEntry(
+                    [common.SubmitterID("AAAAAAAAAAAAAAAAAAAAAAAA")],
+                    [common.SubmitterID("AAAAAAAAAAAAAAAAAAAAAAAA")],
+                    date.today(),
+                    "Test comment",
+                )
+            ],
+        )
+
+    def test_json(self):
+        raw = {
+            "version": "next",
+            "date": "2024-03-07",
+            "entries": [
+                {
+                    "contributors": ["AAAAAAAAAAAAAAAAAAAAAAAA"],
+                    "reviewers": ["AAAAAAAAAAAAAAAAAAAAAAAA"],
+                    "date": "2024-03-07",
+                    "comment": "Test comment",
+                }
+            ],
+        }
+        release = common.Release.from_json(raw)
+        assert release.to_json() == raw
+
+
+class TestChangeLog(unittest.TestCase):
+    def test_json(self):
+        raw = {
+            "releases": [
+                {
+                    "version": "next",
+                    "date": "2024-03-07",
+                    "entries": [
+                        {
+                            "contributors": ["AAAAAAAAAAAAAAAAAAAAAAAA"],
+                            "reviewers": ["AAAAAAAAAAAAAAAAAAAAAAAA"],
+                            "date": "2024-03-07",
+                            "comment": "Test comment",
+                        }
+                    ],
+                }
+            ]
+        }
+        cl = common.ChangeLog.from_json(raw)
+        assert cl.to_json() == raw
