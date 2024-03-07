@@ -151,10 +151,20 @@ class ReleaseEntry:
         if not validate:
             return
 
-        self.validate()
+        errors = self.validate()
+        if errors:
+            raise ValidationError(errors)
 
     def validate(self) -> list[ValidationErrorInfo]:
-        raise NotImplementedError
+        errors: list[ValidationErrorInfo] = []
+        if not self.contributors:
+            errors.append(ValidationErrorInfo("contributors", "contributor list cannot be empty"))
+        for contributor in self.contributors:
+            errors.extend(contributor.validate())
+        for reviewer in self.reviewers:
+            errors.extend(reviewer.validate())
+
+        return errors
 
 
 class ReleaseVersion:
@@ -187,3 +197,9 @@ class ReleaseVersion:
 class Release:
     version: ReleaseVersion
     date: datetime.date
+    entries: list[ReleaseEntry]
+
+    def __init__(self, version: ReleaseVersion, date: datetime.date, entries: list[ReleaseEntry], validate: bool = True) -> None:
+        self.version = version
+        self.date = date
+        self.entries = entries

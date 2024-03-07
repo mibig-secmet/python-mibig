@@ -1,3 +1,4 @@
+from datetime import date
 import unittest
 
 from mibig.errors import ValidationError
@@ -78,3 +79,30 @@ class TestReleaseVersion(unittest.TestCase):
         common.ReleaseVersion("next")
         with self.assertRaises(ValidationError):
             common.ReleaseVersion("Bob")
+
+
+class TestReleaseEntry(unittest.TestCase):
+    def test_init(self):
+        common.ReleaseEntry(
+            [common.SubmitterID("AAAAAAAAAAAAAAAAAAAAAAAA")],
+            [common.SubmitterID("AAAAAAAAAAAAAAAAAAAAAAAA")],
+            date.today(),
+            "Test comment",
+        )
+
+        # can't have empty submitters
+        with self.assertRaises(ValidationError):
+            common.ReleaseEntry(
+                [],
+                [common.SubmitterID("AAAAAAAAAAAAAAAAAAAAAAAA")],
+                date.today(),
+                "Test comment",
+            )
+
+        # empty reviewers list is fine for legacy entries
+        common.ReleaseEntry(
+            [common.SubmitterID("AAAAAAAAAAAAAAAAAAAAAAAA")],
+            [],
+            date.today(),
+            "Test comment",
+        )
