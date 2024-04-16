@@ -307,3 +307,32 @@ class ChangeLog:
     def from_json(cls, raw: dict[str, Any]) -> Self:
         releases = [Release.from_json(r) for r in raw["releases"]]
         return cls(releases)
+
+
+class Smiles:
+    value: str
+
+    def __init__(self, value: str, validate: bool = True) -> None:
+        self.value = value
+
+        if not validate:
+            return
+
+        errors = self.validate()
+        if errors:
+            raise ValidationError(errors)
+
+    def validate(self) -> list[ValidationErrorInfo]:
+        errors: list[ValidationErrorInfo] = []
+
+        if not re.match(r"^[\[\]a-zA-Z0-9\@()=\/\\#+.%*-]+$", self.value):
+            errors.append(ValidationErrorInfo("Smiles", f"Invalid value {self.value:r}"))
+
+        return errors
+
+    @classmethod
+    def from_json(cls, raw: str) -> Self:
+        return cls(raw)
+
+    def to_json(self) -> str:
+        return self.value
