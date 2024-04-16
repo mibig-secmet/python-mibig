@@ -2,7 +2,7 @@ import re
 from typing import Any, Self
 
 from mibig.converters.shared.common import ChangeLog
-from mibig.converters.shared.mibig import Locus, Taxonomy
+from mibig.converters.shared.mibig.common import Locus, Taxonomy
 from mibig.converters.shared.mibig.compound import Compound
 from mibig.converters.shared.mibig.genes import Genes
 from mibig.errors import ValidationError, ValidationErrorInfo
