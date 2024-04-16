@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import datetime
 import re
 from typing import Any, Self
@@ -6,19 +5,25 @@ from typing import Any, Self
 
 from mibig.errors import ValidationError
 from mibig.validation import ValidationErrorInfo
+from mibig.utils import CDS, INVALID_CHARS, Record
 
-
-@dataclass
 class Location:
     begin: int
     end: int
 
-    def __post_init__(self) -> None:
-        if self.begin < self.end:
-            raise ValueError("Location.to cannot be smaller than Location.from")
+    def __init__(self, begin: int, end: int, validate: bool = True, **kwargs) -> None:
+        self.begin = begin
+        self.end = end
+
+        if not validate:
+            return
+
+        errors = self.validate(**kwargs)
+        if errors:
+            raise ValidationError(errors)
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         begin = raw["from"]
         end = raw["to"]
         if not isinstance(begin, int):
@@ -26,34 +31,100 @@ class Location:
         if not isinstance(end, int):
             raise ValueError("Location.to needs to be an integer")
 
-        return cls(begin, end)
+        return cls(begin, end, **kwargs)
 
     def to_json(self) -> dict[str, int]:
         return {"from": self.begin, "to": self.end}
 
-    def validate(self, **_kwargs) -> list[ValidationErrorInfo]:
-        # TODO: Add when sequence handling has been decided
-        raise NotImplementedError
+    def validate(self, record: Record | None = None, cds: CDS | None = None) -> list[ValidationErrorInfo]:
+        errors: list[ValidationErrorInfo] = []
+
+        if self.begin < 0:
+            errors.append(ValidationErrorInfo("Location.from", "From coordinate must be positive"))
+        if self.end < 0:
+            errors.append(ValidationErrorInfo("Location,to", "To coordinate must be positive"))
+
+        if self.begin > self.end:
+            errors.append(
+                ValidationErrorInfo(
+                    "Location", f"Location.from {self.begin} must be less than Location.to {self.end}"
+                )
+            )
+
+        if record:
+            if self.begin > record.seq_len:
+                errors.append(
+                    ValidationErrorInfo(
+                        "Location.from", "Location.from must be less than the sequence length"
+                    )
+                )
+            if self.end > record.seq_len:
+                errors.append(
+                    ValidationErrorInfo(
+                        "Location.to", "Location.to must be less than the sequence length"
+                    )
+                )
+
+        if cds:
+            if self.end > cds.translation_length:
+                errors.append(
+                    ValidationErrorInfo(
+                        "Location.to", "Location.to must be less than the translation length"
+                    )
+                )
+        return errors
 
 
-class GeneId:
+class NovelGeneId:
     _inner: str
 
-    def __init__(self, inner: str) -> None:
-        if " " in inner or "," in inner:
-            raise ValueError(f"Invalid gene id {inner!r}")
-
+    def __init__(self, inner: str, validate: bool = True, **kwargs) -> None:
         self._inner = inner
+
+        if not validate:
+            return
+
+        errors = self.validate(**kwargs)
+        if errors:
+            raise ValidationError(errors)
 
     def __str__(self) -> str:
         return self._inner
 
+    def validate(self) -> list[ValidationErrorInfo]:
+        errors: list[ValidationErrorInfo] = []
+
+        if not self._inner:
+            errors.append(ValidationErrorInfo("gene_id", "Gene id cannot be empty"))
+
+        if INVALID_CHARS.search(self._inner):
+            errors.append(
+                ValidationErrorInfo(
+                    "gene_id",
+                    f"Gene id {self._inner!r} contains invalid characters",
+                )
+            )
+
+        return errors
+
+    @classmethod
+    def from_json(cls, raw: str, **kwargs) -> Self:
+        return cls(raw, **kwargs)
+
     def to_json(self) -> str:
         return self._inner
 
-    def validate(self, **_kwargs) -> list[ValidationErrorInfo]:
-        # TODO: Add when sequence handing has been decided
-        raise NotImplementedError
+
+class GeneId(NovelGeneId):
+    def validate(self, record: Record | None = None) -> list[ValidationErrorInfo]:
+        errors = super().validate()
+
+        if record and not record.get_cds(self._inner):
+            errors.append(
+                ValidationErrorInfo("gene_id", f"Gene id {self._inner!r} not found in record")
+            )
+
+        return errors
 
 
 class Citation:
