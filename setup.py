@@ -7,6 +7,7 @@ short_description = "Python classes to handle MIBiG data"
 long_description = open('README.md').read()
 
 install_requires = [
+    "helperlibs",
 ]
 
 tests_require = [
