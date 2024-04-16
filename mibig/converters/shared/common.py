@@ -66,9 +66,13 @@ class Citation:
     database: str
     value: str
 
-    def __init__(self, database: str, value: str) -> None:
+    def __init__(self, database: str, value: str, validate: bool = True) -> None:
         self.database = database
         self.value = value
+
+        if not validate:
+            return
+
         errors = self.validate()
         if errors:
             raise ValidationError(errors)
@@ -97,6 +101,18 @@ class Citation:
                 )
             ]
         return []
+
+
+def validate_citation_list(citations: list[Citation], field: str | None = None) -> list[ValidationErrorInfo]:
+    if field is None:
+        field = "Citation"
+
+    errors: list[ValidationErrorInfo] = []
+    if not citations:
+        errors.append(ValidationErrorInfo(field, "citation list cannot be empty"))
+    for citation in citations:
+        errors.extend(citation.validate())
+    return errors
 
 
 class SubmitterID:
