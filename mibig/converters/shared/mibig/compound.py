@@ -262,6 +262,8 @@ class Evidence:
         return {"method": self.method, "references": [r.to_json() for r in self.references]}
 
 
+VALID_NAME_PATTERN = r"^[a-zA-Zα-ωΑ-Ω0-9\[\]'()\/&,. +-]+$"
+
 class Compound:
     name: str
     evidence: list[Evidence]
@@ -285,7 +287,6 @@ class Compound:
         r"^gnps:MSV\d+$",
         r"^cyanometdb:CyanoMetDB_\d{4,4}$",
     }
-    VALID_NAME_PATTERN = r"^[a-zA-Zα-ωΑ-Ω0-9\[\]'()\/&,. +-]+$"
 
     def __init__(self, name: str, evidence: list[Evidence],
                  classes: list[CompoundClass] | None = None,
@@ -322,7 +323,7 @@ class Compound:
     def validate(self) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
 
-        if not re.match(self.VALID_NAME_PATTERN, self.name):
+        if not re.match(VALID_NAME_PATTERN, self.name):
             errors.append(ValidationErrorInfo("Compound", f"Invalid name {self.name!r}"))
 
         for ev in self.evidence:
@@ -338,7 +339,7 @@ class Compound:
             errors.extend(self.structure.validate())
 
         for synonym in self.synonyms:
-            if not re.match(self.VALID_NAME_PATTERN, synonym):
+            if not re.match(VALID_NAME_PATTERN, synonym):
                 errors.append(ValidationErrorInfo("Compound", f"Invalid synonym {synonym!r}"))
 
         for db in self.databases:
@@ -346,7 +347,7 @@ class Compound:
                 errors.append(ValidationErrorInfo("Compound", f"Invalid database {db!r}"))
 
         for moiety in self.moieties:
-            if not re.match(self.VALID_NAME_PATTERN, moiety):
+            if not re.match(VALID_NAME_PATTERN, moiety):
                 errors.append(ValidationErrorInfo("Compound", f"Invalid moiety {moiety!r}"))
 
         if self.mass is not None and self.mass <= 0:
