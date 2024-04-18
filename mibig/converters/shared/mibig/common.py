@@ -1,6 +1,6 @@
 from typing import Any, Self
 
-from mibig.converters.shared.common import Location, Citation
+from mibig.converters.shared.common import Location, Citation, validate_citation_list
 from mibig.errors import ValidationError
 from mibig.utils import Record
 from mibig.validation import ValidationErrorInfo
@@ -52,21 +52,25 @@ class SubstrateEvidence:
                 )
             )
 
-        for ref in self.references:
-            errors.extend(ref.validate())
+        if self.method != "Sequence-based prediction":
+            errors.extend(validate_citation_list(self.references))
 
         return errors
 
     def to_json(self) -> dict[str, Any]:
-        return {
+        ret: dict[str, Any] = {
             "method": self.method,
-            "references": [r.to_json() for r in self.references],
         }
+
+        if self.references:
+            ret["references"] = [r.to_json() for r in self.references]
+
+        return ret
 
     @classmethod
     def from_json(cls, raw: dict[str, Any]) -> Self:
         method = raw["method"]
-        references = [Citation.from_json(r) for r in raw["references"]]
+        references = [Citation.from_json(r) for r in raw.get("references", [])]
         return cls(method, references)
 
 
