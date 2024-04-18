@@ -2,6 +2,7 @@ import re
 from typing import Any, Self
 
 from mibig.converters.shared.common import ChangeLog
+from mibig.converters.shared.mibig.biosynthesis import Biosynthesis
 from mibig.converters.shared.mibig.common import Locus, Taxonomy
 from mibig.converters.shared.mibig.compound import Compound
 from mibig.converters.shared.mibig.genes import Genes
@@ -16,8 +17,7 @@ class MibigEntry:
     status: str
     completeness: str
     loci: list[Locus]
-    # TODO: deal with biosynthesis
-    # biosynthesis: Biosynthesis
+    biosynthesis: Biosynthesis
     compounds: list[Compound]
     taxonomy: Taxonomy
     genes: Genes | None
@@ -38,7 +38,7 @@ class MibigEntry:
                  status: str,
                  completeness: str,
                  loci: list[Locus],
-                 # biosynthesis: Biosynthesis,
+                 biosynthesis: Biosynthesis,
                  compounds: list[Compound],
                  taxonomy: Taxonomy,
                  genes: Genes | None = None,
@@ -55,7 +55,7 @@ class MibigEntry:
         self.status = status
         self.completeness = completeness
         self.loci = loci
-        # self.biosynthesis = biosynthesis
+        self.biosynthesis = biosynthesis
         self.compounds = compounds
         self.taxonomy = taxonomy
         self.genes = genes
@@ -92,6 +92,8 @@ class MibigEntry:
         for locus in self.loci:
             errors.extend(locus.validate(**kwargs))
 
+        errors.extend(self.biosynthesis.validate(**kwargs))
+
         for compound in self.compounds:
             errors.extend(compound.validate())
 
@@ -110,6 +112,7 @@ class MibigEntry:
         compounds = [Compound.from_json(c) for c in raw["compounds"]]
         taxonomy = Taxonomy.from_json(raw["taxonomy"])
         genes = Genes.from_json(raw["genes"], **kwargs) if "genes" in raw else None
+        biosynthesis = Biosynthesis.from_json(raw["biosynthesis"], **kwargs)
 
         return cls(
             raw["accession"],
@@ -119,6 +122,7 @@ class MibigEntry:
             raw["status"],
             raw["completeness"],
             loci,
+            biosynthesis,
             compounds,
             taxonomy,
             genes,
@@ -137,6 +141,7 @@ class MibigEntry:
             "status": self.status,
             "completeness": self.completeness,
             "loci": [locus.to_json() for locus in self.loci],
+            "biosynthesis": self.biosynthesis.to_json(),
             "compounds": [c.to_json() for c in self.compounds],
             "taxonomy": self.taxonomy.to_json(),
         }
