@@ -1,9 +1,30 @@
+from enum import Enum
 from typing import Any, Self
 
 from mibig.converters.shared.common import Location, Citation, validate_citation_list
 from mibig.errors import ValidationError
 from mibig.utils import Record
 from mibig.validation import ValidationErrorInfo
+
+
+class COMPLETENESS_LEVELS(Enum):
+    UNKNOWN = "unknown"
+    PARTIAL = "partial"
+    COMPLETE = "complete"
+
+
+class QUALITY_LEVELS(Enum):
+    QUESTIONABLE = "questionable"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class STATUS_LEVELS(Enum):
+    PENDING = "pending"
+    EMBARGOED = "embargoed"
+    ACTIVE = "active"
+    RETIRED = "retired"
 
 
 class SubstrateEvidence:
