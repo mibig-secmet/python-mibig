@@ -1,3 +1,4 @@
+from dataclasses import dataclass, InitVar, field
 import datetime
 import re
 from typing import Any, Self
@@ -186,18 +187,22 @@ def validate_citation_list(citations: list[Citation], field: str | None = None) 
     return errors
 
 
+@dataclass(frozen=True)
 class SubmitterID:
     _inner: str
+    _validate: InitVar[bool] = True
 
-    def __init__(self, value: str, validate: bool = True) -> None:
-        self._inner = value
+    def __post_init__(self, _validate: bool = True) -> None:
 
-        if not validate:
+        if not _validate:
             return
 
         errors = self.validate()
         if errors:
             raise ValidationError(errors)
+
+    def __lt__(self, other: Self) -> bool:
+        return self._inner < other._inner
 
     def validate(self) -> list[ValidationErrorInfo]:
         if len(self._inner) != 24:
@@ -213,7 +218,7 @@ class SubmitterID:
 
     @classmethod
     def from_json(cls, raw: str) -> Self:
-        return cls(raw, validate=True)
+        return cls(raw)
 
 
 class ReleaseEntry:
