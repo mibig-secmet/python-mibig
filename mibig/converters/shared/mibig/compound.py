@@ -2,6 +2,7 @@ import re
 from typing import Any, Self
 
 from mibig.converters.shared.common import Citation, Smiles, validate_citation_list
+from mibig.converters.shared.mibig.common import QUALITY_LEVELS
 from mibig.errors import ValidationError
 from mibig.validation import ValidationErrorInfo
 
@@ -320,11 +321,15 @@ class Compound:
             raise ValidationError(errors)
 
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, quality: QUALITY_LEVELS | None = None) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
 
         if not re.match(VALID_NAME_PATTERN, self.name):
             errors.append(ValidationErrorInfo("Compound", f"Invalid name {self.name!r}"))
+
+        if quality and quality is not QUALITY_LEVELS.QUESTIONABLE:
+            if not self.evidence:
+                errors.append(ValidationErrorInfo("Compound", "Missing evidence"))
 
         for ev in self.evidence:
             errors.extend(ev.validate())
