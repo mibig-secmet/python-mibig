@@ -7,20 +7,20 @@ from mibig.utils import Record
 from mibig.validation import ValidationErrorInfo
 
 
-class COMPLETENESS_LEVELS(Enum):
+class CompletenessLevel(Enum):
     UNKNOWN = "unknown"
     PARTIAL = "partial"
     COMPLETE = "complete"
 
 
-class QUALITY_LEVELS(Enum):
+class QualityLevel(Enum):
     QUESTIONABLE = "questionable"
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
 
 
-class STATUS_LEVELS(Enum):
+class StatusLevel(Enum):
     PENDING = "pending"
     EMBARGOED = "embargoed"
     ACTIVE = "active"

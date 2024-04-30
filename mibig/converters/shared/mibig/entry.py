@@ -3,7 +3,7 @@ from typing import Any, Self
 
 from mibig.converters.shared.common import ChangeLog
 from mibig.converters.shared.mibig.biosynthesis import Biosynthesis
-from mibig.converters.shared.mibig.common import Locus, Taxonomy, QUALITY_LEVELS, STATUS_LEVELS, COMPLETENESS_LEVELS
+from mibig.converters.shared.mibig.common import Locus, Taxonomy, QualityLevel, StatusLevel, CompletenessLevel
 from mibig.converters.shared.mibig.compound import Compound
 from mibig.converters.shared.mibig.genes import Genes
 from mibig.errors import ValidationError, ValidationErrorInfo
@@ -13,9 +13,9 @@ class MibigEntry:
     accession: str
     version: int
     changelog: ChangeLog
-    quality: QUALITY_LEVELS
-    status: STATUS_LEVELS
-    completeness: COMPLETENESS_LEVELS
+    quality: QualityLevel
+    status: StatusLevel
+    completeness: CompletenessLevel
     loci: list[Locus]
     biosynthesis: Biosynthesis
     compounds: list[Compound]
@@ -31,9 +31,9 @@ class MibigEntry:
                  accession: str,
                  version: int,
                  changelog: ChangeLog,
-                 quality: QUALITY_LEVELS,
-                 status: STATUS_LEVELS,
-                 completeness: COMPLETENESS_LEVELS,
+                 quality: QualityLevel,
+                 status: StatusLevel,
+                 completeness: CompletenessLevel,
                  loci: list[Locus],
                  biosynthesis: Biosynthesis,
                  compounds: list[Compound],
@@ -72,7 +72,7 @@ class MibigEntry:
         if not self.ENTRY_PATTERN.match(self.accession):
             errors.append(ValidationErrorInfo("MibigEntry.accession", f"Invalid accession: {self.accession}"))
 
-        if self.status == STATUS_LEVELS.RETIRED and not self.retirement_reasons:
+        if self.status == StatusLevel.RETIRED and not self.retirement_reasons:
             errors.append(ValidationErrorInfo("MibigEntry.retirement_reasons", "Retirement reasons must be provided for retired entries"))
 
         errors.extend(self.changelog.validate())
@@ -92,12 +92,20 @@ class MibigEntry:
 
         return errors
 
+    def __str__(self) -> str:
+        ret = f"MibigEntry({self.accession}, {self.version}, {self.quality}, {self.status}, {self.completeness})"
+
+        if self.comment:
+            ret += f" - {self.comment}"
+
+        return ret
+
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         changelog = ChangeLog.from_json(raw["changelog"])
-        quality = QUALITY_LEVELS(raw["quality"])
-        status = STATUS_LEVELS(raw["status"])
-        completeness = COMPLETENESS_LEVELS(raw["completeness"])
+        quality = QualityLevel(raw["quality"])
+        status = StatusLevel(raw["status"])
+        completeness = CompletenessLevel(raw["completeness"])
         loci = [Locus.from_json(locus) for locus in raw["loci"]]
         compounds = [Compound.from_json(c, quality=quality) for c in raw["compounds"]]
         taxonomy = Taxonomy.from_json(raw["taxonomy"])
