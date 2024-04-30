@@ -37,7 +37,7 @@ class Location:
     def to_json(self) -> dict[str, int]:
         return {"from": self.begin, "to": self.end}
 
-    def validate(self, record: Record | None = None, cds: CDS | None = None) -> list[ValidationErrorInfo]:
+    def validate(self, record: Record | None = None, cds: CDS | None = None, **kwargs) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
 
         if self.begin < 0:
