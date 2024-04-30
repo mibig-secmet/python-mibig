@@ -265,6 +265,62 @@ class Evidence:
 
 VALID_NAME_PATTERN = r"^[a-zA-Zα-ωΑ-Ω0-9\[\]'()\/&,. +-]+$"
 
+class CompoundRef:
+    database: str
+    identifier: str
+
+    VALID_DATABASE_PATTERNS = {
+        "pubchem": r"^\d+$",
+        "chebi": r"^\d+$",
+        "chembl": r"^CHEMBL\d+$",
+        "chemspider": r"^\d+$",
+        "npatlas": r"^NPA\d+$",
+        "lotus": r"^Q\d+$",
+        "gnps": r"^MSV\d+$",
+        "cyanometdb": r"^CyanoMetDB_\d{4,4}$",
+    }
+
+    def __init__(self, database: str, identifier: str, validate: bool = True) -> None:
+        self.database = database
+        self.identifier = identifier
+
+        if not validate:
+            return
+
+        errors = self.validate()
+        if errors:
+            raise ValidationError(errors)
+
+    def validate(self) -> list[ValidationErrorInfo]:
+        errors: list[ValidationErrorInfo] = []
+
+        if self.database not in self.VALID_DATABASE_PATTERNS:
+            errors.append(
+                ValidationErrorInfo(
+                    message=f"Invalid database: {self.database}",
+                    field="compound.database",
+                )
+            )
+
+        if not re.match(self.VALID_DATABASE_PATTERNS[self.database], self.identifier):
+            errors.append(
+                ValidationErrorInfo(
+                    message=f"Invalid identifier: {self.identifier}",
+                    field="compound.database",
+                )
+            )
+
+        return errors
+
+    @classmethod
+    def from_json(cls, raw: str) -> Self:
+        database, identifier = raw.split(":", 1)
+        return cls(database, identifier)
+
+    def to_json(self) -> str:
+        return f"{self.database}:{self.identifier}"
+
+
 class Compound:
     name: str
     evidence: list[Evidence]
@@ -272,7 +328,7 @@ class Compound:
     bioactivities: list[Bioactivity]
     structure: Smiles | None
     synonyms: list[str]
-    databases: list[str]
+    databases: list[CompoundRef]
     moieties: list[str]
     cyclic: bool | None
     mass: float | None
@@ -294,12 +350,13 @@ class Compound:
                  bioactivities: list[Bioactivity] | None = None,
                  structure: Smiles | None = None,
                  synonyms: list[str] | None = None,
-                 databases: list[str] | None = None,
+                 databases: list[CompoundRef] | None = None,
                  moieties: list[str] | None = None,
                  cyclic: bool | None = None,
                  mass: float | None = None,
                  formula: str | None = None,
                  validate: bool = True,
+                 **kwargs,
                 ) -> None:
         self.name = name
         self.evidence = evidence
@@ -316,7 +373,7 @@ class Compound:
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
@@ -348,8 +405,7 @@ class Compound:
                 errors.append(ValidationErrorInfo("Compound", f"Invalid synonym {synonym!r}"))
 
         for db in self.databases:
-            if not any(re.match(p, db) for p in self.VALID_DATABASE_PATTERNS):
-                errors.append(ValidationErrorInfo("Compound", f"Invalid database {db!r}"))
+            errors.extend(db.validate())
 
         for moiety in self.moieties:
             if not re.match(VALID_NAME_PATTERN, moiety):
@@ -372,7 +428,7 @@ class Compound:
             bioactivities=[Bioactivity.from_json(b) for b in raw.get("bioactivities", [])],
             structure=Smiles.from_json(raw.get("structure", {})),
             synonyms=raw.get("synonyms"),
-            databases=raw.get("databaseIds"),
+            databases=[CompoundRef.from_json(ref) for ref in raw.get("databaseIds", [])],
             moieties=raw.get("moieties"),
             cyclic=raw.get("cyclic"),
             mass=raw.get("mass"),
@@ -394,7 +450,7 @@ class Compound:
         if self.synonyms:
             ret["synonyms"] = self.synonyms
         if self.databases:
-            ret["databaseIds"] = self.databases
+            ret["databaseIds"] = [db.to_json() for db in self.databases]
         if self.moieties:
             ret["moieties"] = self.moieties
         if self.cyclic:

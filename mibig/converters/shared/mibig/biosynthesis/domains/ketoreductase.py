@@ -1,7 +1,9 @@
 from typing import Any, Self
 
+from mibig.converters.shared.common import QualityLevel
 from mibig.errors import ValidationError, ValidationErrorInfo
 from mibig.converters.shared.mibig.common import SubstrateEvidence
+
 
 class Ketoreductase:
     inactive: bool | None
@@ -9,6 +11,8 @@ class Ketoreductase:
     evidence: list[SubstrateEvidence] | None
 
     VALID_STEREOCHEMISTRY = (
+        "A",
+        "B",
         "A1",
         "A2",
         "B1",
@@ -17,8 +21,14 @@ class Ketoreductase:
         "C2",
     )
 
-    def __init__(self, inactive: bool | None = None, stereochemistry: str | None = None,
-                 evidence: list[SubstrateEvidence] | None = None, validate: bool = True):
+    def __init__(
+        self,
+        inactive: bool | None = None,
+        stereochemistry: str | None = None,
+        evidence: list[SubstrateEvidence] | None = None,
+        validate: bool = True,
+        **kwargs,
+    ):
         self.inactive = inactive
         self.stereochemistry = stereochemistry
         self.evidence = evidence
@@ -26,20 +36,38 @@ class Ketoreductase:
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(
+        self, quality: QualityLevel | None = None, **kwargs
+    ) -> list[ValidationErrorInfo]:
         errors = []
 
-        if self.stereochemistry not in self.VALID_STEREOCHEMISTRY:
+        if (
+            self.stereochemistry
+            and self.stereochemistry not in self.VALID_STEREOCHEMISTRY
+        ):
             errors.append(
                 ValidationErrorInfo(
                     field="stereochemistry",
                     message=f"Invalid stereochemistry: {self.stereochemistry}",
                 )
             )
+
+        if quality != QualityLevel.QUESTIONABLE:
+            if not self.evidence:
+                errors.append(
+                    ValidationErrorInfo(
+                        field="evidence",
+                        message="Evidence is required for non-questionable quality entries",
+                    )
+                )
+                return errors
+
+            for ev in self.evidence:
+                errors.extend(ev.validate(**kwargs))
 
         return errors
 

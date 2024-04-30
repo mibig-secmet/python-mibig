@@ -2,6 +2,7 @@ import re
 from typing import Any, Self
 
 from mibig.converters.shared.common import Citation, Smiles, validate_citation_list
+from mibig.converters.shared.mibig.common import QualityLevel
 from mibig.converters.shared.mibig.compound import VALID_NAME_PATTERN
 from mibig.errors import ValidationError, ValidationErrorInfo
 
@@ -64,7 +65,7 @@ class ReleaseType:
         "Reductive release",
     )
 
-    def __init__(self, name: str, references: list[Citation], details: str | None = None, validate: bool = True):
+    def __init__(self, name: str, references: list[Citation], details: str | None = None, validate: bool = True, **kwargs):
         self.name = name
         self.details = details
         self.references = references
@@ -72,11 +73,11 @@ class ReleaseType:
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, quality: QualityLevel | None = None) -> list[ValidationErrorInfo]:
         errors = []
         if self.name not in self.VALID_RELEASE_TYPES:
             errors.append(ValidationErrorInfo("ReleaseType.name", f"Invalid release type: {self.name}"))
@@ -84,7 +85,8 @@ class ReleaseType:
         if self.name == "Other" and not self.details:
             errors.append(ValidationErrorInfo("ReleaseType.details", "Details must be provided for 'Other' release types"))
 
-        errors.extend(validate_citation_list(self.references))
+        if quality and quality is not QualityLevel.QUESTIONABLE:
+            errors.extend(validate_citation_list(self.references))
         return errors
 
     @classmethod

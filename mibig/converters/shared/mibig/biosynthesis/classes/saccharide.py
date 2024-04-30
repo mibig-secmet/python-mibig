@@ -1,6 +1,11 @@
 from typing import Any, Self
 
-from mibig.converters.shared.common import Citation, GeneId, Smiles, validate_citation_list
+from mibig.converters.shared.common import (
+    Citation,
+    GeneId,
+    Smiles,
+    validate_citation_list,
+)
 from mibig.converters.shared.mibig.common import QualityLevel
 from mibig.errors import ValidationError, ValidationErrorInfo
 
@@ -16,7 +21,9 @@ class GTEvidence:
         "Activity assay",
     )
 
-    def __init__(self, method: str, references: list[Citation], validate: bool = True, **kwargs) -> None:
+    def __init__(
+        self, method: str, references: list[Citation], validate: bool = True, **kwargs
+    ) -> None:
         self.method = method
         self.references = references
 
@@ -27,11 +34,17 @@ class GTEvidence:
         if errors:
             raise ValidationError(errors)
 
-    def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
+    def validate(
+        self, quality: QualityLevel | None = None, **kwargs
+    ) -> list[ValidationErrorInfo]:
         errors = []
 
         if self.method not in self.VALID_METHODS:
-            errors.append(ValidationErrorInfo("GTEvidence.method", f"Invalid method: {self.method}"))
+            errors.append(
+                ValidationErrorInfo(
+                    "GTEvidence.method", f"Invalid method: {self.method}"
+                )
+            )
 
         if quality and quality is not QualityLevel.QUESTIONABLE:
             errors.extend(validate_citation_list(self.references))
@@ -58,7 +71,14 @@ class Glycosyltransferase:
     evidence: list[GTEvidence]
     specificity: Smiles | None
 
-    def __init__(self, gene: GeneId, evidence: list[GTEvidence], specificity: Smiles | None, validate: bool = True, **kwargs) -> None:
+    def __init__(
+        self,
+        gene: GeneId,
+        evidence: list[GTEvidence],
+        specificity: Smiles | None,
+        validate: bool = True,
+        **kwargs,
+    ) -> None:
         self.gene = gene
         self.evidence = evidence
         self.specificity = specificity
@@ -104,7 +124,13 @@ class Subcluster:
     genes: list[GeneId]
     references: list[Citation]
 
-    def __init__(self, genes: list[GeneId], references: list[Citation], validate: bool = True, **kwargs) -> None:
+    def __init__(
+        self,
+        genes: list[GeneId],
+        references: list[Citation],
+        validate: bool = True,
+        **kwargs,
+    ) -> None:
         self.genes = genes
         self.references = references
 
@@ -115,7 +141,9 @@ class Subcluster:
         if errors:
             raise ValidationError(errors)
 
-    def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
+    def validate(
+        self, quality: QualityLevel | None = None, **kwargs
+    ) -> list[ValidationErrorInfo]:
         errors = []
 
         for gene in self.genes:
@@ -145,8 +173,14 @@ class Saccharide:
     subclusters: list[Subcluster]
     glycosyltransferases: list[Glycosyltransferase]
 
-    def __init__(self, subclusters: list[Subcluster], glycosyltransferases: list[Glycosyltransferase], subclass: str | None = None,
-                 validate: bool = True, **kwargs) -> None:
+    def __init__(
+        self,
+        subclusters: list[Subcluster],
+        glycosyltransferases: list[Glycosyltransferase],
+        subclass: str | None = None,
+        validate: bool = True,
+        **kwargs,
+    ) -> None:
         self.subclass = subclass
         self.subclusters = subclusters
         self.glycosyltransferases = glycosyltransferases
@@ -172,20 +206,41 @@ class Saccharide:
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             subclass=raw.get("subclass"),
-            subclusters=[Subcluster.from_json(subcluster, **kwargs) for subcluster in raw["subclusters"]],
-            glycosyltransferases=[Glycosyltransferase.from_json(glycosyltransferase, **kwargs) for glycosyltransferase in raw["glycosyltransferases"]],
+            subclusters=[
+                Subcluster.from_json(subcluster, **kwargs)
+                for subcluster in raw["subclusters"]
+            ],
+            glycosyltransferases=[
+                Glycosyltransferase.from_json(glycosyltransferase, **kwargs)
+                for glycosyltransferase in raw["glycosyltransferases"]
+            ],
         )
 
     def to_json(self) -> dict[str, Any]:
         ret: dict[str, Any] = {
-            "glycosyltransferases": [glycosyltransferase.to_json() for glycosyltransferase in self.glycosyltransferases],
+            "glycosyltransferases": [
+                glycosyltransferase.to_json()
+                for glycosyltransferase in self.glycosyltransferases
+            ],
         }
 
         if self.subclass:
             ret["subclass"] = self.subclass
 
         if self.subclusters:
-            ret["subclusters"] = [subcluster.to_json() for subcluster in self.subclusters]
-
+            ret["subclusters"] = [
+                subcluster.to_json() for subcluster in self.subclusters
+            ]
 
         return ret
+
+    @property
+    def references(self) -> list[Citation]:
+        references = set()
+        for subcluster in self.subclusters:
+            references.update(subcluster.references)
+        for glycosyltransferase in self.glycosyltransferases:
+            for evidence in glycosyltransferase.evidence:
+                references.update(evidence.references)
+
+        return sorted(list(references))

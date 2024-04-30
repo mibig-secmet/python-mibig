@@ -1,6 +1,8 @@
 from typing import Any, Self
 
+from mibig.converters.shared.common import Citation, QualityLevel
 from mibig.errors import ValidationError, ValidationErrorInfo
+
 
 class Other:
     subclass: str
@@ -8,32 +10,54 @@ class Other:
 
     VALID_SUBCLASSES = (
         "aminocoumarin",
+        "butyrolactone",
         "cyclitol",
+        "ectoine",
+        "fatty acid",
+        "flavin",
+        "indole",
+        "non-nrp beta-lactam",
+        "non-nrp siderophore",
+        "nucleoside",
         "other",
+        "pbde",
+        "phenazine",
+        "phosphonate",
+        "shikimate-derived",
+        "trna-derived",
     )
 
-    def __init__(self,
-                 subclass: str,
-                 details: str | None = None,
-                 validate: bool = True) -> None:
+    def __init__(
+        self, subclass: str, details: str | None = None, validate: bool = True, **kwargs
+    ) -> None:
         self.subclass = subclass
         self.details = details
 
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(
+        self, quality: QualityLevel | None = None, **kwargs
+    ) -> list[ValidationErrorInfo]:
         errors = []
 
         if self.subclass not in self.VALID_SUBCLASSES:
-            errors.append(ValidationErrorInfo("Other.subclass", f"Invalid subclass: {self.subclass}"))
+            errors.append(
+                ValidationErrorInfo(
+                    "Other.subclass", f"Invalid subclass: {self.subclass}"
+                )
+            )
 
         if self.subclass == "other" and not self.details:
-            errors.append(ValidationErrorInfo("Other.details", "Missing details for subclass 'other'"))
+            errors.append(
+                ValidationErrorInfo(
+                    "Other.details", "Missing details for subclass 'other'"
+                )
+            )
 
         return errors
 
@@ -53,3 +77,6 @@ class Other:
 
         return ret
 
+    @property
+    def references(self) -> list[Citation]:
+        return []

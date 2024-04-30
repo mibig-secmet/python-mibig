@@ -1,6 +1,6 @@
 from typing import Any, Self
 
-from mibig.converters.shared.common import Smiles
+from mibig.converters.shared.common import QualityLevel, Smiles
 from mibig.converters.shared.mibig.common import SubstrateEvidence
 from mibig.errors import ValidationError, ValidationErrorInfo
 
@@ -11,9 +11,11 @@ class ATSubstrate:
     structure: Smiles | None = None
 
     VALID_NAMES = (
+        "acetyl-CoA",
         "malonyl-CoA",
         "methylmalonyl-CoA",
         "ethylmalonyl-CoA",
+        "methoxymalonyl-CoA",
         "other",
     )
 
@@ -23,6 +25,7 @@ class ATSubstrate:
         details: str | None = None,
         structure: Smiles | None = None,
         validate: bool = True,
+        **kwargs,
     ) -> None:
         self.name = name
         self.details = details
@@ -31,29 +34,33 @@ class ATSubstrate:
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
         if self.name not in self.VALID_NAMES:
             errors.append(
-                ValidationErrorInfo("ATSubstrate.name", f"Invalid substrate name: {self.name}")
+                ValidationErrorInfo(
+                    "ATSubstrate.name", f"Invalid substrate name: {self.name}"
+                )
             )
 
         if self.name == "other":
             if not self.details:
                 errors.append(
                     ValidationErrorInfo(
-                        "ATSubstrate.details", "Details are required for 'other' substrate"
+                        "ATSubstrate.details",
+                        "Details are required for 'other' substrate",
                     )
                 )
 
-            if not self.structure:
+            if quality != QualityLevel.QUESTIONABLE and not self.structure:
                 errors.append(
                     ValidationErrorInfo(
-                        "ATSubstrate.structure", "Structure is required for 'other' substrate"
+                        "ATSubstrate.structure",
+                        "Structure is required for 'other' substrate",
                     )
                 )
 
@@ -79,8 +86,6 @@ class ATSubstrate:
         return ret
 
 
-
-
 class Acyltransferase:
     subtype: str | None = None
     substrates: list[ATSubstrate]
@@ -92,7 +97,14 @@ class Acyltransferase:
         "trans-AT",
     )
 
-    def __init__(self, substrates: list[ATSubstrate], evidence: list[SubstrateEvidence], inactive: bool | None = None, validate: bool = True, **kwargs) -> None:
+    def __init__(
+        self,
+        substrates: list[ATSubstrate],
+        evidence: list[SubstrateEvidence],
+        inactive: bool | None = None,
+        validate: bool = True,
+        **kwargs,
+    ) -> None:
         self.substrates = substrates
         self.evidence = evidence
         self.inactive = inactive
@@ -106,21 +118,41 @@ class Acyltransferase:
 
     def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
+        quality = kwargs.get("quality")
         for substrate in self.substrates:
-            errors.extend(substrate.validate())
+            errors.extend(substrate.validate(**kwargs))
         for ev in self.evidence:
             errors.extend(ev.validate(**kwargs))
-        if self.substrates and not self.evidence:
-            errors.append(ValidationErrorInfo("Acyltransferase.evidence", "Evidence is required if substrates are present"))
+        if (
+            self.substrates
+            and quality != QualityLevel.QUESTIONABLE
+            and not self.evidence
+        ):
+            errors.append(
+                ValidationErrorInfo(
+                    "Acyltransferase.evidence",
+                    "Evidence is required if substrates are present",
+                )
+            )
         if self.inactive:
             if not self.evidence:
-                errors.append(ValidationErrorInfo("Acyltransferase.evidence", "Evidence is required if inactive"))
+                errors.append(
+                    ValidationErrorInfo(
+                        "Acyltransferase.evidence", "Evidence is required if inactive"
+                    )
+                )
             if self.substrates:
-                errors.append(ValidationErrorInfo("Acyltransferase", "Substrates are not allowed if inactive"))
+                errors.append(
+                    ValidationErrorInfo(
+                        "Acyltransferase", "Substrates are not allowed if inactive"
+                    )
+                )
 
         if self.subtype and self.subtype not in self.VALID_SUBTYPES:
             errors.append(
-                ValidationErrorInfo("Acyltransferase.subtype", f"Invalid subtype: {self.subtype}")
+                ValidationErrorInfo(
+                    "Acyltransferase.subtype", f"Invalid subtype: {self.subtype}"
+                )
             )
         return errors
 

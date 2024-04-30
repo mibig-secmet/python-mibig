@@ -2,7 +2,7 @@ from typing import Any, Self
 
 from mibig.errors import ValidationError, ValidationErrorInfo
 
-class Epimerase:
+class ProductTemplate:
     active: bool | None
 
     def __init__(self, active: bool | None = None, validate: bool = True):
@@ -16,7 +16,9 @@ class Epimerase:
             raise ValidationError(errors)
 
     def validate(self) -> list[ValidationErrorInfo]:
-        return []
+        errors = []
+
+        return errors
 
     @classmethod
     def from_json(cls, raw: dict[str, Any]) -> Self:
@@ -25,8 +27,11 @@ class Epimerase:
         )
 
     def to_json(self) -> dict[str, Any]:
-        ret = {}
+        ret: dict[str, Any] = {
+        }
         if self.active is not None:
             ret["active"] = self.active
 
         return ret
+
+

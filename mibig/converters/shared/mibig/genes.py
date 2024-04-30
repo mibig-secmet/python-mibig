@@ -6,6 +6,7 @@ from mibig.converters.shared.common import (
     GeneId,
     Location,
     NovelGeneId,
+    QualityLevel,
     validate_citation_list,
 )
 from mibig.converters.shared.mibig.gene import Domain
@@ -59,7 +60,7 @@ class GeneLocation:
 class Addition:
     id: NovelGeneId
     location: GeneLocation
-    translation: str
+    translation: str | None
 
     VALID_AMINO_ACIDS = "ACDEFGHIKLMNPQRSTVWY"
 
@@ -67,7 +68,7 @@ class Addition:
         self,
         id: NovelGeneId,
         location: GeneLocation,
-        translation: str,
+        translation: str | None,
         validate: bool = True,
         **kwargs,
     ):
@@ -86,13 +87,16 @@ class Addition:
         errors = []
         errors.extend(self.id.validate())
         errors.extend(self.location.validate(**kwargs))
-        if not self.translation:
+        quality: QualityLevel | None = kwargs.get("quality")
+        if quality != QualityLevel.QUESTIONABLE and not self.translation:
             errors.append(
                 ValidationErrorInfo(
                     "Genes.Addition.translation", "Translation must be provided"
                 )
             )
-        if not all(aa in self.VALID_AMINO_ACIDS for aa in self.translation):
+        if self.translation and not all(
+            aa in self.VALID_AMINO_ACIDS for aa in self.translation
+        ):
             errors.append(
                 ValidationErrorInfo(
                     "Genes.Addition.translation", "Invalid amino acid in translation"
@@ -240,7 +244,6 @@ class TailoringFunction:
             details=raw.get("details"),
         )
 
-
     def to_json(self) -> dict[str, Any]:
         ret = {
             "function": self.function,
@@ -256,21 +259,31 @@ class TailoringFunction:
 class Annotation:
     id: GeneId
     name: NovelGeneId | None
+    aliases: list[NovelGeneId] | None
     product: str | None
     functions: list[GeneFunction] | None
     tailoring_functions: list[TailoringFunction] | None
+    domains: list[Domain] | None
 
-    def __init__(self, id: GeneId,
-                 name: NovelGeneId | None = None,
-                 product: str | None = None,
-                 functions: list[GeneFunction] | None = None,
-                 tailoring_functions: list[TailoringFunction] | None = None,
-                 validate: bool = True, **kwargs):
+    def __init__(
+        self,
+        id: GeneId,
+        name: NovelGeneId | None = None,
+        aliases: list[NovelGeneId] | None = None,
+        product: str | None = None,
+        functions: list[GeneFunction] | None = None,
+        tailoring_functions: list[TailoringFunction] | None = None,
+        domains: list[Domain] | None = None,
+        validate: bool = True,
+        **kwargs,
+    ):
         self.id = id
         self.name = name
+        self.aliases = aliases
         self.product = product
         self.functions = functions
         self.tailoring_functions = tailoring_functions
+        self.domains = domains
 
         if not validate:
             return
@@ -283,13 +296,19 @@ class Annotation:
         errors = []
         errors.extend(self.id.validate(**kwargs))
         if self.name:
-            errors.extend(self.name.validate())
+            errors.extend(self.name.validate(**kwargs))
+        if self.aliases:
+            for alias in self.aliases:
+                errors.extend(alias.validate(**kwargs))
         if self.functions:
             for function in self.functions:
                 errors.extend(function.validate())
         if self.tailoring_functions:
             for function in self.tailoring_functions:
                 errors.extend(function.validate())
+        if self.domains:
+            for domain in self.domains:
+                errors.extend(domain.validate(**kwargs))
         return errors
 
     @classmethod
@@ -297,23 +316,31 @@ class Annotation:
         return cls(
             id=GeneId.from_json(raw["id"], **kwargs),
             name=NovelGeneId.from_json(raw["name"]) if "name" in raw else None,
+            aliases=[NovelGeneId.from_json(alias) for alias in raw.get("aliases", [])],
             product=raw.get("product"),
             functions=[GeneFunction.from_json(f) for f in raw.get("functions", [])],
             tailoring_functions=[
-                TailoringFunction.from_json(f) for f in raw.get("tailoring_functions", [])
+                TailoringFunction.from_json(f)
+                for f in raw.get("tailoring_functions", [])
             ],
+            domains=[Domain.from_json(d) for d in raw.get("domains", [])],
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:
         ret: dict[str, Any] = {"id": self.id.to_json()}
         if self.name:
             ret["name"] = self.name.to_json()
+        if self.aliases:
+            ret["aliases"] = [a.to_json() for a in self.aliases]
         if self.product:
             ret["product"] = self.product
         if self.functions:
             ret["functions"] = [f.to_json() for f in self.functions]
         if self.tailoring_functions:
             ret["tailoring_functions"] = [f.to_json() for f in self.tailoring_functions]
+        if self.domains:
+            ret["domains"] = [d.to_json() for d in self.domains]
 
         return ret
 
@@ -322,18 +349,18 @@ class Genes:
     to_add: list[Addition] | None
     to_delete: list[Deletion] | None
     annotations: list[Annotation] | None
-    domains: list[Domain] | None
 
-    def __init__(self,
-                 to_add: list[Addition] | None = None,
-                 to_delete: list[Deletion] | None = None,
-                 annotations: list[Annotation] | None = None,
-                 domains: list[Domain] | None = None,
-                 validate: bool = True, **kwargs):
+    def __init__(
+        self,
+        to_add: list[Addition] | None = None,
+        to_delete: list[Deletion] | None = None,
+        annotations: list[Annotation] | None = None,
+        validate: bool = True,
+        **kwargs,
+    ):
         self.to_add = to_add
         self.to_delete = to_delete
         self.annotations = annotations
-        self.domains = domains
 
         if not validate:
             return
@@ -353,18 +380,19 @@ class Genes:
         if self.annotations:
             for annotation in self.annotations:
                 errors.extend(annotation.validate(**kwargs))
-        if self.domains:
-            for domain in self.domains:
-                errors.extend(domain.validate(**kwargs))
         return errors
 
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             to_add=[Addition.from_json(a, **kwargs) for a in raw.get("to_add", [])],
-            to_delete=[Deletion.from_json(d, **kwargs) for d in raw.get("to_delete", [])],
-            annotations=[Annotation.from_json(a, **kwargs) for a in raw.get("annotations", [])],
-            domains=[Domain.from_json(d, **kwargs) for d in raw.get("domains", [])],
+            to_delete=[
+                Deletion.from_json(d, **kwargs) for d in raw.get("to_delete", [])
+            ],
+            annotations=[
+                Annotation.from_json(a, **kwargs) for a in raw.get("annotations", [])
+            ],
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -375,7 +403,5 @@ class Genes:
             ret["to_delete"] = [d.to_json() for d in self.to_delete]
         if self.annotations:
             ret["annotations"] = [a.to_json() for a in self.annotations]
-        if self.domains:
-            ret["domains"] = [d.to_json() for d in self.domains]
 
         return ret

@@ -1,9 +1,15 @@
 import re
 from typing import Any, Self
 
-from mibig.converters.shared.common import ChangeLog
+from mibig.converters.shared.common import ChangeLog, Citation
 from mibig.converters.shared.mibig.biosynthesis import Biosynthesis
-from mibig.converters.shared.mibig.common import Locus, Taxonomy, QualityLevel, StatusLevel, CompletenessLevel
+from mibig.converters.shared.mibig.common import (
+    Locus,
+    Taxonomy,
+    QualityLevel,
+    StatusLevel,
+    CompletenessLevel,
+)
 from mibig.converters.shared.mibig.compound import Compound
 from mibig.converters.shared.mibig.genes import Genes
 from mibig.errors import ValidationError, ValidationErrorInfo
@@ -27,24 +33,25 @@ class MibigEntry:
 
     ENTRY_PATTERN = re.compile(r"^(BGC\d{7,7}|new\r{3,3})$")
 
-    def __init__(self,
-                 accession: str,
-                 version: int,
-                 changelog: ChangeLog,
-                 quality: QualityLevel,
-                 status: StatusLevel,
-                 completeness: CompletenessLevel,
-                 loci: list[Locus],
-                 biosynthesis: Biosynthesis,
-                 compounds: list[Compound],
-                 taxonomy: Taxonomy,
-                 genes: Genes | None = None,
-                 retirement_reasons: list[str] | None = None,
-                 see_also: list[str] | None = None,
-                 comment: str | None = None,
-                 validate: bool = True,
-                 **kwargs,
-                 ) -> None:
+    def __init__(
+        self,
+        accession: str,
+        version: int,
+        changelog: ChangeLog,
+        quality: QualityLevel,
+        status: StatusLevel,
+        completeness: CompletenessLevel,
+        loci: list[Locus],
+        biosynthesis: Biosynthesis,
+        compounds: list[Compound],
+        taxonomy: Taxonomy,
+        genes: Genes | None = None,
+        retirement_reasons: list[str] | None = None,
+        see_also: list[str] | None = None,
+        comment: str | None = None,
+        validate: bool = True,
+        **kwargs,
+    ) -> None:
         self.accession = accession
         self.version = version
         self.changelog = changelog
@@ -70,10 +77,19 @@ class MibigEntry:
     def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
         if not self.ENTRY_PATTERN.match(self.accession):
-            errors.append(ValidationErrorInfo("MibigEntry.accession", f"Invalid accession: {self.accession}"))
+            errors.append(
+                ValidationErrorInfo(
+                    "MibigEntry.accession", f"Invalid accession: {self.accession}"
+                )
+            )
 
         if self.status == StatusLevel.RETIRED and not self.retirement_reasons:
-            errors.append(ValidationErrorInfo("MibigEntry.retirement_reasons", "Retirement reasons must be provided for retired entries"))
+            errors.append(
+                ValidationErrorInfo(
+                    "MibigEntry.retirement_reasons",
+                    "Retirement reasons must be provided for retired entries",
+                )
+            )
 
         errors.extend(self.changelog.validate())
 
@@ -93,12 +109,34 @@ class MibigEntry:
         return errors
 
     def __str__(self) -> str:
-        ret = f"MibigEntry({self.accession}, {self.version}, {self.quality}, {self.status}, {self.completeness})"
+        ret = f"MibigEntry({self.accession_version}, {self.quality}, {self.status}, {self.completeness})"
 
         if self.comment:
             ret += f" - {self.comment}"
 
         return ret
+
+    @property
+    def accession_version(self) -> str:
+        return f"{self.accession}.{self.version}"
+
+    @property
+    def references(self) -> list[Citation]:
+        publications = set()
+        for locus in self.loci:
+            for evidence in locus.evidence:
+                publications.update(evidence.references)
+
+        for compound in self.compounds:
+            for evidence in compound.evidence:
+                publications.update(evidence.references)
+
+        publications.update(self.biosynthesis.references)
+
+        if self.genes:
+            publications.update(self.genes.references)
+
+        return sorted(list(publications))
 
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
@@ -109,8 +147,14 @@ class MibigEntry:
         loci = [Locus.from_json(locus) for locus in raw["loci"]]
         compounds = [Compound.from_json(c, quality=quality) for c in raw["compounds"]]
         taxonomy = Taxonomy.from_json(raw["taxonomy"])
-        genes = Genes.from_json(raw["genes"], quality=quality, **kwargs) if "genes" in raw else None
-        biosynthesis = Biosynthesis.from_json(raw["biosynthesis"], quality=quality, **kwargs)
+        genes = (
+            Genes.from_json(raw["genes"], quality=quality, **kwargs)
+            if "genes" in raw
+            else None
+        )
+        biosynthesis = Biosynthesis.from_json(
+            raw["biosynthesis"], quality=quality, **kwargs
+        )
 
         return cls(
             raw["accession"],

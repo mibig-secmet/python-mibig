@@ -1,16 +1,37 @@
 from enum import Enum
 from typing import Any, Self
 
-from mibig.converters.shared.common import Citation, GeneId, validate_citation_list
+from mibig.converters.shared.common import (
+    Citation,
+    GeneId,
+    QualityLevel,
+    validate_citation_list,
+)
 from mibig.converters.shared.mibig.biosynthesis.common import Monomer
 from mibig.errors import ValidationError, ValidationErrorInfo
 
 from .cal import CAL
 from .nrps import NrpsTypeI
 from .other import Other
-from .pks import PksIterative, PksModular, PksTransAt
+from .pks import (
+    PksIterative,
+    PksModular,
+    PksModularStarter,
+    PksTransAt,
+    PksTransAtStarter,
+)
 
-ExtraInfo = CAL | NrpsTypeI | Other | PksIterative | PksModular | PksTransAt
+ExtraInfo = (
+    CAL
+    | NrpsTypeI
+    | Other
+    | PksIterative
+    | PksModular
+    | PksTransAt
+    | PksModularStarter
+    | PksTransAtStarter
+)
+
 
 class NcaEvidence:
     method: str
@@ -22,24 +43,40 @@ class NcaEvidence:
         "Activity assay",
     )
 
-    def __init__(self, method: str, references: list[Citation], validate: bool = True) -> None:
+    def __init__(
+        self,
+        method: str,
+        references: list[Citation],
+        validate: bool = True,
+        **kwargs,
+    ) -> None:
         self.method = method
         self.references = references
 
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
 
-        if self.method not in self.VALID_METHODS:
-            errors.append(ValidationErrorInfo("NcaEvidence.method", f"Invalid method {self.method}"))
+        quality: QualityLevel | None = kwargs.get("quality")
 
-        errors.extend(validate_citation_list(self.references))
+        if self.method not in self.VALID_METHODS:
+            errors.append(
+                ValidationErrorInfo(
+                    "NcaEvidence.method", f"Invalid method {self.method}"
+                )
+            )
+
+        errors.extend(
+            validate_citation_list(
+                self.references, "NcaEvidence.references", quality=quality
+            )
+        )
 
         return errors
 
@@ -51,7 +88,7 @@ class NcaEvidence:
     def to_json(self) -> dict[str, Any]:
         return {
             "method": self.method,
-            "references": [r.to_json() for r in self.references]
+            "references": [r.to_json() for r in self.references],
         }
 
 
@@ -61,8 +98,15 @@ class NonCanonicalActivity:
     non_elongating: bool | None = None
     skipped: bool | None = None
 
-    def __init__(self, evidence: list[NcaEvidence], iterations: int | None = None, non_elongating: bool | None = None,
-                 skipped: bool | None = None, validate: bool = True) -> None:
+    def __init__(
+        self,
+        evidence: list[NcaEvidence],
+        iterations: int | None = None,
+        non_elongating: bool | None = None,
+        skipped: bool | None = None,
+        validate: bool = True,
+        **kwargs,
+    ) -> None:
         self.evidence = evidence
         self.iterations = iterations
         self.non_elongating = non_elongating
@@ -71,15 +115,25 @@ class NonCanonicalActivity:
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
 
+        quality: QualityLevel | None = kwargs.get("quality")
+
+        if quality != QualityLevel.QUESTIONABLE:
+            if not self.evidence:
+                errors.append(
+                    ValidationErrorInfo(
+                        "NonCanonicalActivity.evidence",
+                        "At least one evidence must be provided",
+                    )
+                )
         for evidence in self.evidence:
-            errors.extend(evidence.validate())
+            errors.extend(evidence.validate(**kwargs))
 
         return errors
 
@@ -105,7 +159,6 @@ class NonCanonicalActivity:
         return ret
 
 
-
 class ModuleType(Enum):
     CAL = "cal"
     NRPS_TYPE1 = "nrps-type1"
@@ -114,6 +167,8 @@ class ModuleType(Enum):
     PKS_ITERATIVE = "pks-iterative"
     PKS_MODULAR = "pks-modular"
     PKS_TRANS_AT = "pks-trans-at"
+    PKS_MODULAR_STARTER = "pks-modular-starter"
+    PKS_TRANS_AT_STARTER = "pks-trans-at-starter"
 
 
 MAPPING = {
@@ -124,26 +179,41 @@ MAPPING = {
     ModuleType.PKS_ITERATIVE: PksIterative,
     ModuleType.PKS_MODULAR: PksModular,
     ModuleType.PKS_TRANS_AT: PksTransAt,
+    ModuleType.PKS_MODULAR_STARTER: PksModularStarter,
+    ModuleType.PKS_TRANS_AT_STARTER: PksTransAtStarter,
 }
 
 
 class Module:
-    module_type: str
+    module_type: ModuleType
     name: str
     genes: list[GeneId]
     active: bool
     extra_info: ExtraInfo
     integrated_monomers: list[Monomer]
+    non_canonical_activity: NonCanonicalActivity | None
     comment: str | None
 
-    def __init__(self, module_type: str, name: str, genes: list[GeneId], active: bool, extra_info: ExtraInfo,
-                 integrated_monomers: list[Monomer], comment: str | None = None, validate: bool = True, **kwargs) -> None:
+    def __init__(
+        self,
+        module_type: ModuleType,
+        name: str,
+        genes: list[GeneId],
+        active: bool,
+        extra_info: ExtraInfo,
+        integrated_monomers: list[Monomer],
+        non_canonical_activity: NonCanonicalActivity | None = None,
+        comment: str | None = None,
+        validate: bool = True,
+        **kwargs,
+    ) -> None:
         self.module_type = module_type
         self.name = name
         self.genes = genes
         self.active = active
         self.extra_info = extra_info
         self.integrated_monomers = integrated_monomers
+        self.non_canonical_activity = non_canonical_activity
         self.comment = comment
 
         if not validate:
@@ -164,12 +234,18 @@ class Module:
         for gene in self.genes:
             errors.extend(gene.validate(record=kwargs.get("record")))
 
+        if self.non_canonical_activity:
+            errors.extend(self.non_canonical_activity.validate(**kwargs))
+
         return errors
 
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
-        module_type = raw["type"]
+        module_type = ModuleType(raw["type"])
         extra_info = MAPPING[ModuleType(module_type)].from_json(raw, **kwargs)
+        nc_activity = None
+        if raw.get("non_canonical_activity"):
+            nc_activity = NonCanonicalActivity.from_json(raw["non_canonical_activity"])
 
         return cls(
             module_type=module_type,
@@ -178,20 +254,29 @@ class Module:
             active=raw["active"],
             extra_info=extra_info,
             comment=raw.get("comment"),
-            integrated_monomers=[Monomer.from_json(monomer) for monomer in raw.get("integrated_monomers", [])],
+            integrated_monomers=[
+                Monomer.from_json(monomer)
+                for monomer in raw.get("integrated_monomers", [])
+            ],
+            non_canonical_activity=nc_activity,
             **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:
         ret = {
-            "type": self.module_type,
+            "type": self.module_type.value,
             "name": self.name,
             "genes": [gene.to_json() for gene in self.genes],
             "active": self.active,
             **self.extra_info.to_json(),
         }
         if self.integrated_monomers:
-            ret["integrated_monomers"] = [monomer.to_json() for monomer in self.integrated_monomers]
+            ret["integrated_monomers"] = [
+                monomer.to_json() for monomer in self.integrated_monomers
+            ]
+
+        if self.non_canonical_activity:
+            ret["non_canonical_activity"] = self.non_canonical_activity.to_json()
 
         if self.comment:
             ret["comment"] = self.comment

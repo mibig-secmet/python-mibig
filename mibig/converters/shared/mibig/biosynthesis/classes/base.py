@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Any, Self
 
+from mibig.converters.shared.common import Citation
 from mibig.converters.shared.mibig.common import QualityLevel
 from mibig.errors import ValidationError, ValidationErrorInfo
 
@@ -11,13 +12,15 @@ from .ribosomal import Ribosomal
 from .saccharide import Saccharide
 from .terpene import Terpene
 
+
 class SynthesisType(Enum):
     NRPS = "NRPS"
     PKS = "PKS"
     RIBOSOMAL = "ribosomal"
     SACCHARIDE = "saccharide"
-    TERPENE = "TERPENE"
-    OTHER = "OTHER"
+    TERPENE = "terpene"
+    OTHER = "other"
+
 
 ExtraInfo = NRPS | PKS | Ribosomal | Saccharide | Terpene | Other
 
@@ -35,7 +38,13 @@ class BiosynthesisClass:
     class_name: SynthesisType
     extra_info: ExtraInfo
 
-    def __init__(self, class_name: SynthesisType, extra_info: ExtraInfo, validate: bool = True, **kwargs) -> None:
+    def __init__(
+        self,
+        class_name: SynthesisType,
+        extra_info: ExtraInfo,
+        validate: bool = True,
+        **kwargs,
+    ) -> None:
         self.class_name = class_name
         self.extra_info = extra_info
 
@@ -46,7 +55,9 @@ class BiosynthesisClass:
         if errors:
             raise ValidationError(errors)
 
-    def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
+    def validate(
+        self, quality: QualityLevel | None = None, **kwargs
+    ) -> list[ValidationErrorInfo]:
         errors = []
 
         if quality and quality is not QualityLevel.QUESTIONABLE:
@@ -70,3 +81,7 @@ class BiosynthesisClass:
             "class": self.class_name.value,
             **self.extra_info.to_json(),
         }
+
+    @property
+    def references(self) -> list[Citation]:
+        return self.extra_info.references

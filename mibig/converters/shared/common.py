@@ -1,12 +1,21 @@
-from dataclasses import dataclass, InitVar, field
+from dataclasses import dataclass, InitVar
 import datetime
+from enum import Enum
+from functools import total_ordering
 import re
 from typing import Any, Self
-
 
 from mibig.errors import ValidationError
 from mibig.validation import ValidationErrorInfo
 from mibig.utils import CDS, INVALID_CHARS, Record
+
+
+class QualityLevel(Enum):
+    QUESTIONABLE = "questionable"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
 
 class Location:
     begin: int
@@ -37,32 +46,45 @@ class Location:
     def to_json(self) -> dict[str, int]:
         return {"from": self.begin, "to": self.end}
 
-    def validate(self, record: Record | None = None, cds: CDS | None = None, **kwargs) -> list[ValidationErrorInfo]:
+    def validate(
+        self,
+        record: Record | None = None,
+        cds: CDS | None = None,
+        quality: QualityLevel | None = None,
+        **kwargs,
+    ) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
 
-        if self.begin < 0:
-            errors.append(ValidationErrorInfo("Location.from", "From coordinate must be positive"))
-        if self.end < 0:
-            errors.append(ValidationErrorInfo("Location,to", "To coordinate must be positive"))
+        if self.begin < 0 and quality != QualityLevel.QUESTIONABLE:
+            errors.append(
+                ValidationErrorInfo("Location.from", "From coordinate must be positive")
+            )
+        if self.end < 0 and quality != QualityLevel.QUESTIONABLE:
+            errors.append(
+                ValidationErrorInfo("Location,to", "To coordinate must be positive")
+            )
 
         if self.begin > self.end:
             errors.append(
                 ValidationErrorInfo(
-                    "Location", f"Location.from {self.begin} must be less than Location.to {self.end}"
+                    "Location",
+                    f"Location.from {self.begin} must be less than Location.to {self.end}",
                 )
             )
 
-        if record:
+        if record and not quality == QualityLevel.QUESTIONABLE:
             if self.begin > record.seq_len:
                 errors.append(
                     ValidationErrorInfo(
-                        "Location.from", "Location.from must be less than the sequence length"
+                        "Location.from",
+                        "Location.from must be less than the sequence length",
                     )
                 )
             if self.end > record.seq_len:
                 errors.append(
                     ValidationErrorInfo(
-                        "Location.to", "Location.to must be less than the sequence length"
+                        "Location.to",
+                        "Location.to must be less than the sequence length",
                     )
                 )
 
@@ -70,7 +92,8 @@ class Location:
             if self.end > cds.translation_length:
                 errors.append(
                     ValidationErrorInfo(
-                        "Location.to", "Location.to must be less than the translation length"
+                        "Location.to",
+                        "Location.to must be less than the translation length",
                     )
                 )
         return errors
@@ -92,11 +115,26 @@ class NovelGeneId:
     def __str__(self) -> str:
         return self._inner
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
 
         if not self._inner:
             errors.append(ValidationErrorInfo("gene_id", "Gene id cannot be empty"))
+
+        quality: QualityLevel | None = kwargs.get("quality")
+        if quality == QualityLevel.QUESTIONABLE:
+            multi_locus_name = re.match(
+                r"^(\w{3,4})\([\d\w._]+:\d+\-\d+\)$", self._inner
+            )
+            if multi_locus_name:
+                if INVALID_CHARS.search(multi_locus_name.group(1)):
+                    errors.append(
+                        ValidationErrorInfo(
+                            "gene_id",
+                            f"Gene id {self._inner!r} contains invalid characters",
+                        )
+                    )
+                return errors
 
         if INVALID_CHARS.search(self._inner):
             errors.append(
@@ -117,17 +155,22 @@ class NovelGeneId:
 
 
 class GeneId(NovelGeneId):
-    def validate(self, record: Record | None = None) -> list[ValidationErrorInfo]:
-        errors = super().validate()
+    def validate(
+        self, record: Record | None = None, **kwargs
+    ) -> list[ValidationErrorInfo]:
+        errors = super().validate(**kwargs)
 
         if record and not record.get_cds(self._inner):
             errors.append(
-                ValidationErrorInfo("gene_id", f"Gene id {self._inner!r} not found in record")
+                ValidationErrorInfo(
+                    "gene_id", f"Gene id {self._inner!r} not found in record"
+                )
             )
 
         return errors
 
 
+@total_ordering
 class Citation:
     VALID_PATTERNS = {
         "pubmed": r"^(\d+)$",
@@ -174,14 +217,28 @@ class Citation:
             ]
         return []
 
+    def __lt__(self, other: Self) -> bool:
+        return (self.database, self.value) < (other.database, other.value)
 
-def validate_citation_list(citations: list[Citation], field: str | None = None) -> list[ValidationErrorInfo]:
+    def __hash__(self) -> int:
+        return hash((self.database, self.value))
+
+
+def validate_citation_list(
+    citations: list[Citation],
+    field: str | None = None,
+    quality: QualityLevel | None = None,
+) -> list[ValidationErrorInfo]:
     if field is None:
         field = "Citation"
 
     errors: list[ValidationErrorInfo] = []
-    if not citations:
-        errors.append(ValidationErrorInfo(field, "citation list cannot be empty"))
+    if quality is not QualityLevel.QUESTIONABLE and not citations:
+        errors.append(
+            ValidationErrorInfo(
+                field, f"citation list cannot be empty at quality level {quality}"
+            )
+        )
     for citation in citations:
         errors.extend(citation.validate())
     return errors
@@ -193,7 +250,6 @@ class SubmitterID:
     _validate: InitVar[bool] = True
 
     def __post_init__(self, _validate: bool = True) -> None:
-
         if not _validate:
             return
 
@@ -357,7 +413,7 @@ class Release:
         return errors
 
     def __str__(self) -> str:
-        ret =  f"{self.version} ({self.date})\n"
+        ret = f"{self.version} ({self.date})\n"
         for entry in self.entries:
             ret += f"  {entry}\n"
 
@@ -374,7 +430,9 @@ class Release:
     @classmethod
     def from_json(cls, raw: dict[str, Any]) -> Self:
         version = ReleaseVersion.from_json(raw["version"])
-        date = datetime.datetime.strptime(raw["date"], "%Y-%m-%d") if raw["date"] else None
+        date = (
+            datetime.datetime.strptime(raw["date"], "%Y-%m-%d") if raw["date"] else None
+        )
         entries = [ReleaseEntry.from_json(e) for e in raw["entries"]]
 
         return cls(version, date, entries)
@@ -430,7 +488,9 @@ class Smiles:
         errors: list[ValidationErrorInfo] = []
 
         if not re.match(r"^[\[\]a-zA-Z0-9\@()=\/\\#+.%*-]+$", self.value):
-            errors.append(ValidationErrorInfo("Smiles", f"Invalid value {self.value:r}"))
+            errors.append(
+                ValidationErrorInfo("Smiles", f"Invalid value {self.value:r}")
+            )
 
         return errors
 

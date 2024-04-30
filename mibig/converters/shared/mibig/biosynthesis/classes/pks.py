@@ -1,8 +1,9 @@
 from typing import Any, Self
 
-from mibig.converters.shared.common import GeneId
+from mibig.converters.shared.common import Citation, GeneId, QualityLevel
 from mibig.converters.shared.mibig.biosynthesis.common import Monomer
 from mibig.errors import ValidationError, ValidationErrorInfo
+
 
 class PKS:
     subclass: str
@@ -19,13 +20,16 @@ class PKS:
         "Type III",
     )
 
-    def __init__(self,
-                 subclass: str,
-                 cyclases: list[GeneId],
-                 starter_unit: Monomer | None = None,
-                 ketide_length: int | None = None,
-                 iterative: bool | None = None,
-                 validate: bool = True, **kwargs) -> None:
+    def __init__(
+        self,
+        subclass: str,
+        cyclases: list[GeneId],
+        starter_unit: Monomer | None = None,
+        ketide_length: int | None = None,
+        iterative: bool | None = None,
+        validate: bool = True,
+        **kwargs,
+    ) -> None:
         self.subclass = subclass
         self.cyclases = cyclases
         self.starter_unit = starter_unit
@@ -39,12 +43,20 @@ class PKS:
         if errors:
             raise ValidationError(errors)
 
-
-    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
+    def validate(
+        self, quality: QualityLevel | None = None, **kwargs
+    ) -> list[ValidationErrorInfo]:
         errors = []
 
-        if self.subclass not in self.VALID_SUBCLASSES:
-            errors.append(ValidationErrorInfo("PKS.subclass", f"Invalid subclass: {self.subclass}"))
+        if (
+            quality != QualityLevel.QUESTIONABLE
+            and self.subclass not in self.VALID_SUBCLASSES
+        ):
+            errors.append(
+                ValidationErrorInfo(
+                    "PKS.subclass", f"Invalid subclass: {self.subclass}"
+                )
+            )
 
         for cyclase in self.cyclases:
             errors.extend(cyclase.validate(**kwargs))
@@ -53,7 +65,11 @@ class PKS:
             errors.extend(self.starter_unit.validate())
 
         if self.ketide_length and self.ketide_length < 1:
-            errors.append(ValidationErrorInfo("PKS.ketide_length", f"Invalid ketide length: {self.ketide_length}"))
+            errors.append(
+                ValidationErrorInfo(
+                    "PKS.ketide_length", f"Invalid ketide length: {self.ketide_length}"
+                )
+            )
 
         return errors
 
@@ -62,7 +78,9 @@ class PKS:
         return cls(
             subclass=raw["subclass"],
             cyclases=[GeneId.from_json(c) for c in raw.get("cyclases", [])],
-            starter_unit=Monomer.from_json(raw["starter_unit"]) if "starter_unit" in raw else None,
+            starter_unit=Monomer.from_json(raw["starter_unit"])
+            if "starter_unit" in raw
+            else None,
             ketide_length=raw.get("ketide_length"),
             iterative=raw.get("iterative"),
         )
@@ -83,3 +101,7 @@ class PKS:
             ret["iterative"] = self.iterative
 
         return ret
+
+    @property
+    def references(self) -> list[Citation]:
+        return []

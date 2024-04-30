@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, Self
 
-from mibig.converters.shared.common import Location, Citation, validate_citation_list
+from mibig.converters.shared.common import Location, Citation, validate_citation_list, QualityLevel as QualityLevel
 from mibig.errors import ValidationError
 from mibig.utils import Record
 from mibig.validation import ValidationErrorInfo
@@ -11,13 +11,6 @@ class CompletenessLevel(Enum):
     UNKNOWN = "unknown"
     PARTIAL = "partial"
     COMPLETE = "complete"
-
-
-class QualityLevel(Enum):
-    QUESTIONABLE = "questionable"
-    LOW = "low"
-    MEDIUM = "medium"
-    HIGH = "high"
 
 
 class StatusLevel(Enum):
@@ -51,7 +44,7 @@ class SubstrateEvidence:
     references: list[Citation]
 
     def __init__(
-        self, method: str, references: list[Citation], validate: bool = True
+        self, method: str, references: list[Citation], validate: bool = True, **kwargs,
     ) -> None:
         self.method = method
         self.references = references
@@ -59,11 +52,11 @@ class SubstrateEvidence:
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, quality: QualityLevel | None = None) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
 
         if self.method not in self.VALID_METHODS:
@@ -74,7 +67,7 @@ class SubstrateEvidence:
             )
 
         if self.method != "Sequence-based prediction":
-            errors.extend(validate_citation_list(self.references))
+            errors.extend(validate_citation_list(self.references, "SubstrateEvidence.references", quality=quality))
 
         return errors
 
@@ -171,7 +164,7 @@ class Locus:
             if record.id != self.accession:
                 errors.append(ValidationErrorInfo("Locus.accession", f"Accession mismatch: {self.accession} != {record.id}"))
         else:
-            if self.accession.count(".") > 1:
+            if self.accession.count(".") > 1 and not self.accession.startswith("MIBIG."):
                 errors.append(ValidationErrorInfo("Locus.accession", f"Invalid accession {self.accession}"))
 
         errors.extend(self.location.validate(**kwargs))

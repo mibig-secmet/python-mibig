@@ -7,6 +7,7 @@ from mibig.errors import ValidationError, ValidationErrorInfo
 from .acyltransferase import Acyltransferase
 from .adenylation import Adenylation
 from .aminotransferase import Aminotransferase
+from .branching import Branching
 from .carrier import Carrier
 from .condensation import Condensation
 from .cyclase import Cyclase
@@ -15,10 +16,12 @@ from .enoylreductase import Enoylreductase
 from .epimerase import Epimerase
 from .hydroxylase import Hydroxylase
 from .ketoreductase import Ketoreductase
+from .ketosynthase import Ketosynthase
 from .ligase import Ligase
 from .methyltransferase import Methyltransferase
 from .other import Other
 from .oxidase import Oxidase
+from .product_template import ProductTemplate
 from .thioesterase import Thioesterase
 from .thioreductase import Thioreductase
 
@@ -27,6 +30,8 @@ class DomainType(Enum):
     ACYLTRANSFERASE = "acyltransferase"
     ADENYLATION = "adenylation"
     AMINOTRANSFERASE = "aminotransferase"
+    AMP_BINDING = "amp-binding"
+    BRANCHING = "branching"
     CARRIER = "carrier"
     CONDENSATION = "condensation"
     CYCLASE = "cyclase"
@@ -35,18 +40,21 @@ class DomainType(Enum):
     EPIMERASE = "epimerase"
     HYDROXYLASE = "hydroxylase"
     KETOREDUCTASE = "ketoreductase"
+    KETOSYNTHASE = "ketosynthase"
     LIGASE = "ligase"
     METHYLTRANSFERASE = "methyltransferase"
     OTHER = "other"
     OXIDASE = "oxidase"
+    PRODUCT_TEMPLATE = "product_template"
     THIOESTERASE = "thioesterase"
     THIOREDUCTASE = "thioreductase"
 
 
 ExtraInfo = Union[
     Acyltransferase,
-    Aminotransferase,
     Adenylation,
+    Aminotransferase,
+    Branching,
     Carrier,
     Condensation,
     Cyclase,
@@ -55,17 +63,22 @@ ExtraInfo = Union[
     Epimerase,
     Hydroxylase,
     Ketoreductase,
+    Ketosynthase,
     Ligase,
     Methyltransferase,
     Other,
     Oxidase,
+    ProductTemplate,
     Thioesterase,
-    Thioreductase,]
+    Thioreductase,
+]
 
 MAPPING: dict[DomainType, type[ExtraInfo]] = {
     DomainType.ACYLTRANSFERASE: Acyltransferase,
     DomainType.ADENYLATION: Adenylation,
     DomainType.AMINOTRANSFERASE: Aminotransferase,
+    DomainType.AMP_BINDING: Adenylation,  # AMP-binding is pretty much the same as Adenylation
+    DomainType.BRANCHING: Branching,
     DomainType.CARRIER: Carrier,
     DomainType.CONDENSATION: Condensation,
     DomainType.CYCLASE: Cyclase,
@@ -74,10 +87,12 @@ MAPPING: dict[DomainType, type[ExtraInfo]] = {
     DomainType.EPIMERASE: Epimerase,
     DomainType.HYDROXYLASE: Hydroxylase,
     DomainType.KETOREDUCTASE: Ketoreductase,
+    DomainType.KETOSYNTHASE: Ketosynthase,
     DomainType.LIGASE: Ligase,
     DomainType.METHYLTRANSFERASE: Methyltransferase,
     DomainType.OTHER: Other,
     DomainType.OXIDASE: Oxidase,
+    DomainType.PRODUCT_TEMPLATE: ProductTemplate,
     DomainType.THIOESTERASE: Thioesterase,
     DomainType.THIOREDUCTASE: Thioreductase,
 }
@@ -89,9 +104,15 @@ class Domain:
     location: Location
     extra_info: ExtraInfo
 
-
-    def __init__(self, domain_type: DomainType, gene: GeneId, location: Location, extra_info: ExtraInfo,
-                 validate: bool = True, **kwargs) -> None:
+    def __init__(
+        self,
+        domain_type: DomainType,
+        gene: GeneId,
+        location: Location,
+        extra_info: ExtraInfo,
+        validate: bool = True,
+        **kwargs,
+    ) -> None:
         self.domain_type = domain_type
         self.gene = gene
         self.location = location
@@ -106,15 +127,13 @@ class Domain:
 
     def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
-
-        # TODO: Add valication for domain_type
-        # errors.extend(self.domain_type.value.validate(**kwargs))
-
         errors.extend(self.gene.validate(record=kwargs.get("record")))
+
         cds = None
         if "record" in kwargs:
             cds = kwargs["record"].get_cds(str(self.gene))
-        errors.extend(self.location.validate(cds=cds))
+
+        errors.extend(self.location.validate(cds=cds, quality=kwargs.get("quality")))
 
         return errors
 

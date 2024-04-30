@@ -1,4 +1,5 @@
 import re
+
 try:
     from typing import List
 except ImportError:
@@ -14,7 +15,15 @@ from .saccharide import Saccharide
 from .terpene import Terpene
 
 
-BIOSYNTHETIC_CLASSES = {"Alkaloid", "Polyketide", "RiPP", "NRP", "Saccharide", "Terpene", "Other"}
+BIOSYNTHETIC_CLASSES = {
+    "Alkaloid",
+    "Polyketide",
+    "RiPP",
+    "NRP",
+    "Saccharide",
+    "Terpene",
+    "Other",
+}
 
 
 class Cluster:
@@ -36,17 +45,22 @@ class Cluster:
         self.status = raw["status"]  # str
 
         self.alkaloid = Alkaloid(raw.get("alkaloid")) if "alkaloid" in raw else None
-        self.polyketide = Polyketide(raw.get("polyketide")) if "polyketide" in raw else None
+        self.polyketide = (
+            Polyketide(raw.get("polyketide")) if "polyketide" in raw else None
+        )
         self.other = Other(raw.get("other")) if "other" in raw else None
         self.nrp = NRP(raw.get("nrp")) if "nrp" in raw else None
         self.loci = Loci(raw.get("loci")) if "loci" in raw else None
         self.genes = Genes(raw.get("genes")) if "genes" in raw else None
         self.ripp = RiPP(raw.get("ripp")) if "ripp" in raw else None
-        self.saccharide = Saccharide(raw.get("saccharide")) if "saccharide" in raw else None
+        self.saccharide = (
+            Saccharide(raw.get("saccharide")) if "saccharide" in raw else None
+        )
         self.terpene = Terpene(raw.get("terpene")) if "terpene" in raw else None
 
-        self.retirement_reasons = raw.get(
-            "retirement_reasons") if "retirement_reasons" in raw else None  # List[str]
+        self.retirement_reasons = (
+            raw.get("retirement_reasons") if "retirement_reasons" in raw else None
+        )  # List[str]
         self.see_also = raw.get("see_also") if "see_also" in raw else None  # List[str]
 
         assert self.status in ("pending", "active", "retired")
@@ -63,8 +77,12 @@ class Cluster:
 
 class Genes:
     def __init__(self, raw):
-        self.annotations = [GeneAnnotation(ann) for ann in raw.get("annotations", [])] or []
-        self.extra_genes = [ExtraGene(gene) for gene in raw.get("extra_genes", [])] or []
+        self.annotations = [
+            GeneAnnotation(ann) for ann in raw.get("annotations", [])
+        ] or []
+        self.extra_genes = [
+            ExtraGene(gene) for gene in raw.get("extra_genes", [])
+        ] or []
         self.operons = [Operon(op) for op in raw.get("operons", [])] or []
 
 
@@ -73,16 +91,19 @@ class GeneAnnotation:
         self.id = raw["id"]  # str
 
         self.comments = raw.get("comments")  # str
-        self.functions = [GeneFunction(gf) for gf in raw.get("functions", [])] or []
+        self.functions = [GeneFunction(gf) for gf in raw.get("functions", [])]
         self.mutation_phenotype = raw.get("mut_pheno")  # str
+        self.domains = [GeneDomain(d) for d in raw.get("domains", [])]
         self.name = raw.get("name")  # str
         self.product = raw.get("product")  # str
         self.publications: List[Publication] = [
-            Publication(pub) for pub in raw.get("publications", [])] or []
+            Publication(pub) for pub in raw.get("publications", [])
+        ] or []
         self.tailoring = raw.get("tailoring", [])  # list[str]
 
     def __str__(self):
         import json
+
         return json.dumps(self.to_json())
 
     def to_json(self):
@@ -99,8 +120,13 @@ class GeneAnnotation:
 
 
 class GeneFunction:
-    EVIDENCE = {"Sequence-based prediction", "Other in vivo study",
-                "Heterologous expression", "Knock-out", "Activity assay"}
+    EVIDENCE = {
+        "Sequence-based prediction",
+        "Other in vivo study",
+        "Heterologous expression",
+        "Knock-out",
+        "Activity assay",
+    }
 
     def __init__(self, raw):
         self.category = raw["category"]  # str
@@ -109,6 +135,28 @@ class GeneFunction:
 
     def to_json(self):
         return {"category": self.category, "evidence": self.evidence}
+
+
+class GeneDomain:
+    def __init__(self, raw):
+        self.name = raw["name"]  # str
+        self.location = DomainLocation(raw["location"])
+        self.substrates = [DomainSubstrate(sub) for sub in raw.get("substrates", [])]
+
+
+class DomainSubstrate:
+    def __init__(self, raw):
+        self.name = raw["name"]  # str
+        self.structure = raw["structure"]  # str
+        self.evidence = raw.get("evidence", [])  # list[str]
+        self.publications = [Publication(pub) for pub in raw.get("publications", [])]
+        self.tool = raw.get("tool")  # str
+
+
+class DomainLocation:
+    def __init__(self, raw):
+        self.begin = raw["begin"]  # int
+        self.end = raw["end"]  # int
 
 
 class ExtraGene:
@@ -159,8 +207,15 @@ class Operon:
 
 
 class Loci:
-    EVIDENCE = {"Gene expression correlated with compound production",
-                "Knock-out studies", "Enzymatic assays", "Heterologous expression", "In vitro expression"}
+    EVIDENCE = {
+        "Gene expression correlated with compound production",
+        "Correlation of genomic and metabolomic data",
+        "Homology-based prediction",
+        "Knock-out studies",
+        "Enzymatic assays",
+        "Heterologous expression",
+        "In vitro expression",
+    }
 
     def __init__(self, raw):
         self.accession = raw["accession"]  # str
@@ -171,22 +226,29 @@ class Loci:
         assert self.end is None or self.end >= 2
         self.mixs_compliant = raw.get("mixs_compliant")  # bool
         self.evidence = raw.get("evidence")  # list[str]
-        assert self.evidence is None or not set(self.evidence).difference(self.EVIDENCE), set(self.evidence).difference(self.EVIDENCE)
+        assert self.evidence is None or not set(self.evidence).difference(
+            self.EVIDENCE
+        ), set(self.evidence).difference(self.EVIDENCE)
 
 
 class Compound:
     def __init__(self, raw):
-        self.chem_acts = raw.get("chem_acts")                                     # list[str]
+        self.chem_acts = raw.get("chem_acts")  # list[str]
         self.chem_moieties = [Moiety(mo) for mo in raw.get("chem_moieties", [])] or []
-        self.chem_struct = raw.get("chem_struct")                                 # str
-        self.chem_synonyms = raw.get("chem_synonyms", [])                         # list[str]
-        self.chem_targets = [ChemTarget(target) for target in raw.get("chem_targets", [])] or []
-        self.compound = raw["compound"]                                           # str
-        self.database_id = [DatabaseID(dbid) for dbid in raw.get("database_id", [])] or []
-        self.evidence = raw.get("evidence", [])                                   # list[str]
-        self.mass_spec_ion_type = raw.get("mass_spec_ion_type")                   # str
-        self.mol_mass = raw.get("mol_mass")                                       # number
+        self.chem_struct = raw.get("chem_struct")  # str
+        self.chem_synonyms = raw.get("chem_synonyms", [])  # list[str]
+        self.chem_targets = [
+            ChemTarget(target) for target in raw.get("chem_targets", [])
+        ] or []
+        self.compound = raw["compound"]  # str
+        self.database_id = [
+            DatabaseID(dbid) for dbid in raw.get("database_id", [])
+        ] or []
+        self.evidence = raw.get("evidence", [])  # list[str]
+        self.mass_spec_ion_type = raw.get("mass_spec_ion_type")  # str
+        self.mol_mass = raw.get("mol_mass")  # number
         self.molecular_formula = MolecularFormula(raw.get("molecular_formula"))
+        self.cyclic = raw.get("cyclic")  # bool
 
 
 FORMULA_PARTS_PATTERN = re.compile(r"([A-Z][a-z]?)([0-9]*)")
@@ -203,7 +265,7 @@ class MolecularFormula:
         parts = FORMULA_PARTS_PATTERN.findall(raw)
         for atom, count in parts:
             if not count:
-                count = '1'
+                count = "1"
             self.parts.append(FormulaPart(atom, int(count)))
 
 
@@ -216,13 +278,14 @@ class FormulaPart:
 class ChemTarget:
     def __init__(self, raw):
         self.publications: List[Publication] = [
-            Publication(pub) for pub in raw.get("publications", [])] or []
-        self.target = raw.get("target")              # str
+            Publication(pub) for pub in raw.get("publications", [])
+        ] or []
+        self.target = raw.get("target")  # str
 
 
 class Moiety:
     def __init__(self, raw):
-        self.moiety = raw["moiety"]          # str
+        self.moiety = raw["moiety"]  # str
         self.subcluster = raw.get("subcluster", [])  # list[str]
 
 
@@ -230,6 +293,6 @@ class DatabaseID:
     def __init__(self, raw):
         db, ref = raw.split(":", 1)
         assert db in {"pubchem", "chebi", "chembl", "chemspider", "npatlas", "lotus"}
-        self.text = raw                                                            # str
+        self.text = raw  # str
         self.db = db
         self.reference = ref

@@ -2,7 +2,8 @@ from typing import Any, Self
 
 from mibig.errors import ValidationError, ValidationErrorInfo
 
-class Epimerase:
+
+class Ketosynthase:
     active: bool | None
 
     def __init__(self, active: bool | None = None, validate: bool = True):
