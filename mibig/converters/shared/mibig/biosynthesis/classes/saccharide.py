@@ -101,12 +101,10 @@ class Glycosyltransferase:
 
 
 class Subcluster:
-    specificity: Smiles
     genes: list[GeneId]
     references: list[Citation]
 
-    def __init__(self, specificity: Smiles, genes: list[GeneId], references: list[Citation], validate: bool = True, **kwargs) -> None:
-        self.specificity = specificity
+    def __init__(self, genes: list[GeneId], references: list[Citation], validate: bool = True, **kwargs) -> None:
         self.genes = genes
         self.references = references
 
@@ -117,27 +115,26 @@ class Subcluster:
         if errors:
             raise ValidationError(errors)
 
-    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
+    def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
 
-        errors.extend(self.specificity.validate())
         for gene in self.genes:
             errors.extend(gene.validate(**kwargs))
-        errors.extend(validate_citation_list(self.references))
+
+        if quality and quality is not QualityLevel.QUESTIONABLE:
+            errors.extend(validate_citation_list(self.references))
 
         return errors
 
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
-            specificity=Smiles(raw["specificity"]),
             genes=[GeneId.from_json(gene, **kwargs) for gene in raw["genes"]],
             references=[Citation.from_json(c) for c in raw.get("references", [])],
         )
 
     def to_json(self) -> dict[str, Any]:
         return {
-            "specificity": self.specificity.to_json(),
             "genes": [gene.to_json() for gene in self.genes],
             "references": [c.to_json() for c in self.references],
         }
