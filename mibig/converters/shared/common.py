@@ -322,13 +322,13 @@ class ReleaseVersion:
 
 class Release:
     version: ReleaseVersion
-    date: datetime.date
+    date: datetime.date | None
     entries: list[ReleaseEntry]
 
     def __init__(
         self,
         version: ReleaseVersion,
-        date: datetime.date,
+        date: datetime.date | None,
         entries: list[ReleaseEntry],
         validate: bool = True,
     ) -> None:
@@ -343,6 +343,14 @@ class Release:
         errors: list[ValidationErrorInfo] = []
 
         errors.extend(self.version.validate())
+
+        if self.date is None and str(self.version) != "next":
+            errors.append(
+                ValidationErrorInfo(
+                    "Release", "Release date must be provided if version is not 'next'"
+                )
+            )
+
         for entry in self.entries:
             errors.extend(entry.validate())
 
@@ -356,16 +364,17 @@ class Release:
         return ret
 
     def to_json(self) -> dict[str, Any]:
-        return {
+        ret = {
             "version": self.version.to_json(),
-            "date": self.date.strftime("%Y-%m-%d"),
             "entries": [e.to_json() for e in self.entries],
         }
+        ret["date"] = self.date.strftime("%Y-%m-%d") if self.date else None
+        return ret
 
     @classmethod
     def from_json(cls, raw: dict[str, Any]) -> Self:
         version = ReleaseVersion.from_json(raw["version"])
-        date = datetime.datetime.strptime(raw["date"], "%Y-%m-%d")
+        date = datetime.datetime.strptime(raw["date"], "%Y-%m-%d") if raw["date"] else None
         entries = [ReleaseEntry.from_json(e) for e in raw["entries"]]
 
         return cls(version, date, entries)
