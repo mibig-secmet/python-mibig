@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Any, Self
 
+from mibig.converters.shared.mibig.common import QualityLevel
 from mibig.errors import ValidationError, ValidationErrorInfo
 
 from .nrps import NRPS
@@ -45,8 +46,11 @@ class BiosynthesisClass:
         if errors:
             raise ValidationError(errors)
 
-    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
-        errors = self.extra_info.validate(**kwargs)
+    def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
+        errors = []
+
+        if quality and quality is not QualityLevel.QUESTIONABLE:
+            errors = self.extra_info.validate(**kwargs)
 
         return errors
 

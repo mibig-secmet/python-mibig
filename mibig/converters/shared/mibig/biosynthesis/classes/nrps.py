@@ -2,6 +2,7 @@ from typing import Any, Self
 
 from mibig.converters.shared.mibig.biosynthesis.common import ReleaseType
 from mibig.converters.shared.mibig.biosynthesis.domains.base import Domain
+from mibig.converters.shared.mibig.common import QualityLevel
 from mibig.errors import ValidationError, ValidationErrorInfo
 
 class NRPS:
@@ -30,8 +31,11 @@ class NRPS:
         if errors:
             raise ValidationError(errors)
 
-    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
+    def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
+
+        if quality and quality is QualityLevel.QUESTIONABLE:
+            return errors
 
         if self.subclass not in self.VALID_SUBCLASSES:
             errors.append(ValidationErrorInfo("NRPS.subclass", f"Invalid subclass: {self.subclass}"))

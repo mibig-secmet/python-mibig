@@ -108,21 +108,25 @@ class LocusEvidence:
     method: str
     references: list[Citation]
 
-    def __init__(self, method: str, references: list[Citation], validate: bool = True):
+    def __init__(self, method: str, references: list[Citation], validate: bool = True, **kwargs) -> None:
         self.method = method
         self.references = references
 
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
         if self.method not in self.VALID_METHODS:
             errors.append(ValidationErrorInfo("LocationEvidence.method", f"Invalid method {self.method}"))
+
+        if quality and quality is not QualityLevel.QUESTIONABLE:
+            if not self.references:
+                errors.append(ValidationErrorInfo("LocationEvidence.references", "References are required for non-questionable entries"))
 
         for citation in self.references:
             errors.extend(citation.validate())

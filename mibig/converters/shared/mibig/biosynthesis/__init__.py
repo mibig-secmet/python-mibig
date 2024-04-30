@@ -1,6 +1,7 @@
 from typing import Any, Self
 
 from mibig.converters.shared.common import GeneId
+from mibig.converters.shared.mibig.common import QualityLevel
 from mibig.converters.shared.mibig.biosynthesis.classes import BiosynthesisClass
 from mibig.converters.shared.mibig.biosynthesis.modules.base import Module
 from mibig.converters.shared.mibig.biosynthesis.path import Path
@@ -31,12 +32,14 @@ class Biosynthesis:
         if errors:
             raise ValidationError(errors)
 
-    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
+    def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
         if not self.classes:
             errors.append(ValidationErrorInfo("Biosynthesis.classes", "At least one class is required"))
-        if not self.paths:
-            errors.append(ValidationErrorInfo("Biosynthesis.paths", "At least one path is required"))
+
+        if quality and quality is not QualityLevel.QUESTIONABLE:
+            if not self.paths:
+                errors.append(ValidationErrorInfo("Biosynthesis.paths", "At least one path is required"))
 
         for _class in self.classes:
             errors.extend(_class.validate(**kwargs))
