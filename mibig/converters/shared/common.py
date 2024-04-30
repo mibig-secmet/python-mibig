@@ -213,6 +213,9 @@ class SubmitterID:
 
         return []
 
+    def __str__(self) -> str:
+        return self._inner
+
     def to_json(self) -> str:
         return self._inner
 
@@ -260,6 +263,9 @@ class ReleaseEntry:
 
         return errors
 
+    def __str__(self) -> str:
+        return f"{self.date} {self.comment}, Contributors: {', '.join(str(c) for c in self.contributors)}; Reviewers: {', '.join(str(r) for r in self.reviewers)}"
+
     def to_json(self) -> dict[str, Any]:
         return {
             "contributors": [c.to_json() for c in self.contributors],
@@ -303,6 +309,9 @@ class ReleaseVersion:
                 ]
         return []
 
+    def __str__(self) -> str:
+        return self._inner
+
     def to_json(self) -> str:
         return self._inner
 
@@ -338,6 +347,13 @@ class Release:
             errors.extend(entry.validate())
 
         return errors
+
+    def __str__(self) -> str:
+        ret =  f"{self.version} ({self.date})\n"
+        for entry in self.entries:
+            ret += f"  {entry}\n"
+
+        return ret
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -376,6 +392,9 @@ class ChangeLog:
 
         return errors
 
+    def __str__(self) -> str:
+        return "\n".join(str(r) for r in self.releases)
+
     def to_json(self) -> dict[str, Any]:
         return {"releases": [r.to_json() for r in self.releases]}
 
@@ -405,6 +424,9 @@ class Smiles:
             errors.append(ValidationErrorInfo("Smiles", f"Invalid value {self.value:r}"))
 
         return errors
+
+    def __str__(self) -> str:
+        return self.value
 
     @classmethod
     def from_json(cls, raw: str) -> Self:
