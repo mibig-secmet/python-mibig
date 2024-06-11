@@ -109,7 +109,8 @@ from mibig.converters.shared.mibig.common import (
     SubstrateEvidence,
     Taxonomy,
 )
-from mibig.converters.shared.mibig.compound import Compound, CompoundRef
+from mibig.converters.shared.mibig.compound import Compound, CompoundRef, Evidence as CompoundEvidence, Formula
+from mibig.converters.shared.mibig.gene.function import MutationPhenotype
 from mibig.converters.shared.mibig.genes import (
     Addition,
     Annotation,
@@ -170,7 +171,7 @@ def main():
     if status == StatusLevel.RETIRED:
         retirement_reasons = v3_data.cluster.retirement_reasons
 
-    compounds = convert_compounds(v3_data)
+    compounds = convert_compounds(v3_data, QualityLevel.QUESTIONABLE)
     genes = convert_genes(v3_data, biosynthesis)
 
     see_also = None
@@ -320,21 +321,37 @@ def convert_genes(v3_data: Everything, biosynthesis: Biosynthesis) -> Genes | No
     )
 
 
-def convert_compounds(v3_data: Everything) -> list[Compound]:
+def convert_compounds(v3_data: Everything, quality: QualityLevel) -> list[Compound]:
     compounds = []
 
     for v3_cmpd in v3_data.cluster.compounds:
         structure = None
+        if v3_cmpd.chem_struct:
+            structure = Smiles(v3_cmpd.chem_struct)
+
+        formula = None
+        if v3_cmpd.molecular_formula.raw:
+            formula = Formula(v3_cmpd.molecular_formula.raw)
+
+        evidence = []
+        if v3_cmpd.evidence:
+            for ev in v3_cmpd.evidence:
+                if ev == "X-ray":
+                    ev = "X-ray crystallography"
+                elif ev == "Chemical derivatization":
+                    ev = "Chemical derivatisation"
+                evidence.append(CompoundEvidence(ev, references=[], quality=quality))
 
         compound = Compound(
             name=v3_cmpd.compound,
-            evidence=[],
+            evidence=evidence,
             structure=structure,
+            formula=formula,
             databases=[
                 CompoundRef(ref.db, ref.reference) for ref in v3_cmpd.database_id
             ],
             mass=v3_cmpd.mol_mass,
-            quality=QualityLevel.QUESTIONABLE,  # imported entries are questionable until proven otherwise
+            quality=quality,
         )
         compounds.append(compound)
 

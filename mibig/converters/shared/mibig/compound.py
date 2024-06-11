@@ -321,6 +321,90 @@ class CompoundRef:
         return f"{self.database}:{self.identifier}"
 
 
+FORMULA_PARTS_PATTERN = re.compile(r"([A-Z][a-z]?)([0-9]*)")
+
+
+class FormulaPart:
+    atom: str
+    count: int
+
+    def __init__(self, atom: str, count: int, validate: bool = True) -> None:
+        self.atom = atom
+        self.count = count
+
+        if not validate:
+            return
+
+        errors = self.validate()
+        if errors:
+            raise ValidationError(errors)
+
+    def validate(self) -> list[ValidationErrorInfo]:
+        errors: list[ValidationErrorInfo] = []
+
+        if not re.match(r"^[A-Za-z]+$", self.atom):
+            errors.append(
+                ValidationErrorInfo(
+                    message=f"Invalid atom: {self.atom}",
+                    field="compound.formula",
+                )
+            )
+
+        if self.count <= 0:
+            errors.append(
+                ValidationErrorInfo(
+                    message=f"Invalid count: {self.count}",
+                    field="compound.formula",
+                )
+            )
+
+        return errors
+
+
+class Formula:
+    raw: str
+    _parts: list[FormulaPart]
+
+    def __init__(self, raw: str, validate: bool = True):
+        self.raw = raw
+        self._parts = self._parse(raw)
+
+        if not validate:
+            return
+
+        errors = self.validate()
+        if errors:
+            raise ValidationError(errors)
+
+    def validate(self) -> list[ValidationErrorInfo]:
+        errors: list[ValidationErrorInfo] = []
+        for part in self._parts:
+            errors.extend(part.validate())
+
+        return errors
+
+    @property
+    def parts(self) -> list[FormulaPart]:
+        return self._parts
+
+    @staticmethod
+    def _parse(raw: str) -> list[FormulaPart]:
+        raw_parts = FORMULA_PARTS_PATTERN.findall(raw)
+        parts: list[FormulaPart] = []
+        for atom, count in raw_parts:
+            if not count:
+                count = "1"
+            parts.append(FormulaPart(atom, int(count)))
+        return parts
+
+    @classmethod
+    def from_json(cls, raw: str) -> Self:
+        return cls(raw)
+
+    def to_json(self) -> str:
+        return self.raw
+
+
 class Compound:
     name: str
     evidence: list[Evidence]
@@ -332,20 +416,10 @@ class Compound:
     moieties: list[str]
     cyclic: bool | None
     mass: float | None
-    formula: str | None
+    formula: Formula | None
 
-    VALID_DATABASE_PATTERNS = {
-        r"^pubchem:\d+$",
-        r"^chebi:\d+$",
-        r"^chembl:CHEMBL\d+$",
-        r"^chemspider:\d+$",
-        r"^npatlas:NPA\d+$",
-        r"^lotus:Q\d+$",
-        r"^gnps:MSV\d+$",
-        r"^cyanometdb:CyanoMetDB_\d{4,4}$",
-    }
-
-    def __init__(self, name: str, evidence: list[Evidence],
+    def __init__(self, name: str,
+                 evidence: list[Evidence],
                  classes: list[CompoundClass] | None = None,
                  bioactivities: list[Bioactivity] | None = None,
                  structure: Smiles | None = None,
@@ -354,7 +428,7 @@ class Compound:
                  moieties: list[str] | None = None,
                  cyclic: bool | None = None,
                  mass: float | None = None,
-                 formula: str | None = None,
+                 formula: Formula | None = None,
                  validate: bool = True,
                  **kwargs,
                 ) -> None:
@@ -377,7 +451,6 @@ class Compound:
         if errors:
             raise ValidationError(errors)
 
-
     def validate(self, quality: QualityLevel | None = None) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
 
@@ -389,7 +462,7 @@ class Compound:
                 errors.append(ValidationErrorInfo("Compound", "Missing evidence"))
 
         for ev in self.evidence:
-            errors.extend(ev.validate())
+            errors.extend(ev.validate(quality=quality))
 
         for compound_class in self.classes:
             errors.extend(compound_class.validate())
@@ -414,8 +487,8 @@ class Compound:
         if self.mass is not None and self.mass <= 0:
             errors.append(ValidationErrorInfo("Compound", f"Invalid mass {self.mass}"))
 
-        if self.formula is not None and not re.match(r"^(?:[A-Za-z]+\d*)+$", self.formula):
-            errors.append(ValidationErrorInfo("Compound", f"Invalid formula {self.formula!r}"))
+        if self.formula is not None:
+            errors.extend(self.formula.validate())
 
         return errors
 
@@ -423,16 +496,16 @@ class Compound:
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             raw["name"],
-            [Evidence.from_json(e) for e in raw["evidence"]],
+            [Evidence.from_json(e, **kwargs) for e in raw["evidence"]],
             classes=[CompoundClass.from_json(c) for c in raw.get("classes", [])],
             bioactivities=[Bioactivity.from_json(b) for b in raw.get("bioactivities", [])],
-            structure=Smiles.from_json(raw.get("structure", {})),
+            structure=Smiles.from_json(raw["structure"]) if "structure" in raw else None,
             synonyms=raw.get("synonyms"),
             databases=[CompoundRef.from_json(ref) for ref in raw.get("databaseIds", [])],
             moieties=raw.get("moieties"),
             cyclic=raw.get("cyclic"),
             mass=raw.get("mass"),
-            formula=raw.get("formula"),
+            formula=Formula.from_json(raw["formula"]) if "formula" in raw else None,
             **kwargs,
         )
 
@@ -458,6 +531,6 @@ class Compound:
         if self.mass:
             ret["mass"] = self.mass
         if self.formula:
-            ret["formula"] = self.formula
+            ret["formula"] = self.formula.to_json()
 
         return ret
