@@ -5,23 +5,24 @@ from mibig.errors import ValidationError, ValidationErrorInfo
 class Epimerase:
     active: bool | None
 
-    def __init__(self, active: bool | None = None, validate: bool = True):
+    def __init__(self, active: bool | None = None, validate: bool = True, **kwargs):
         self.active = active
 
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, **_) -> list[ValidationErrorInfo]:
         return []
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             active=raw.get("active"),
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:

@@ -208,7 +208,7 @@ class Saccharide:
             subclass=raw.get("subclass"),
             subclusters=[
                 Subcluster.from_json(subcluster, **kwargs)
-                for subcluster in raw["subclusters"]
+                for subcluster in raw.get("subclusters", [])
             ],
             glycosyltransferases=[
                 Glycosyltransferase.from_json(glycosyltransferase, **kwargs)

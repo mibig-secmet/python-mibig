@@ -321,6 +321,7 @@ class Ribosomal:
                 GeneId.from_json(peptidase, **kwargs)
                 for peptidase in raw.get("peptidases", [])
             ],
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:

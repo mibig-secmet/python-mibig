@@ -1,26 +1,26 @@
 from typing import Any, Self
 
-from mibig.converters.shared.common import Citation
+from mibig.converters.shared.common import Citation, QualityLevel, validate_citation_list
 from mibig.errors import ValidationError, ValidationErrorInfo
 
 
 class Cyclase:
     references: list[Citation]
 
-    def __init__(self, references: list[Citation], validate: bool = True):
+    def __init__(self, references: list[Citation], validate: bool = True, **kwargs):
         self.references = references
 
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
-        for ref in self.references:
-            errors.extend(ref.validate())
+        quality: QualityLevel | None = kwargs.get("quality")
+        errors.extend(validate_citation_list(self.references, "Cyclase.references", quality=quality))
 
         return errors
 

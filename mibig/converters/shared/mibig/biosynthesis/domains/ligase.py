@@ -19,7 +19,7 @@ class Ligase:
         if errors:
             raise ValidationError(errors)
 
-    def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
+    def validate(self, quality: QualityLevel | None = None, **_) -> list[ValidationErrorInfo]:
         errors = []
         for substrate in self.substrates:
             errors.extend(substrate.validate())
@@ -31,10 +31,11 @@ class Ligase:
         return errors
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             substrates=[Smiles(sub) for sub in raw.get("substrates", [])],
-            evidence=[SubstrateEvidence.from_json(evi) for evi in raw.get("evidence", [])],
+            evidence=[SubstrateEvidence.from_json(evi, **kwargs) for evi in raw.get("evidence", [])],
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:

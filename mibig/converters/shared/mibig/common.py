@@ -82,10 +82,10 @@ class SubstrateEvidence:
         return ret
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         method = raw["method"]
         references = [Citation.from_json(r) for r in raw.get("references", [])]
-        return cls(method, references)
+        return cls(method, references, **kwargs)
 
 
 class LocusEvidence:

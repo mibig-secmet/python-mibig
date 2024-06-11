@@ -62,10 +62,11 @@ class Other:
         return errors
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             subclass=raw["subclass"],
             details=raw.get("details"),
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:

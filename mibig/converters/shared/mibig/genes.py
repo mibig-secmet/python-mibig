@@ -110,7 +110,8 @@ class Addition:
         return cls(
             id=NovelGeneId.from_json(raw["id"]),
             location=GeneLocation.from_json(raw["location"], **kwargs),
-            translation=raw["translation"],
+            translation=raw.get("translation"),
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -198,6 +199,7 @@ class TailoringFunction:
         db_reference: str | None,
         details: str | None,
         validate: bool = True,
+        **kwargs,
     ):
         self.function = function
         self.references = references
@@ -207,12 +209,14 @@ class TailoringFunction:
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
+        quality: QualityLevel | None = kwargs.get("quality")
+
         if self.function not in self.VALID_FUNCTIONS:
             errors.append(
                 ValidationErrorInfo(
@@ -221,7 +225,7 @@ class TailoringFunction:
             )
 
         errors.extend(
-            validate_citation_list(self.references, "Tailoring function references")
+            validate_citation_list(self.references, "Tailoring function references", quality=quality)
         )
 
         if self.db_reference and not re.match(
@@ -236,12 +240,13 @@ class TailoringFunction:
         return errors
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             function=raw["function"],
             references=[Citation.from_json(ref) for ref in raw["references"]],
             db_reference=raw.get("db_reference"),
             details=raw.get("details"),
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:

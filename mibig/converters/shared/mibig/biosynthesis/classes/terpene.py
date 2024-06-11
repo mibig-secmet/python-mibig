@@ -86,6 +86,7 @@ class Terpene:
             ],
             synthases=[GeneId.from_json(s, **kwargs) for s in raw.get("synthases", [])],
             precursor=raw.get("precursor"),
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:

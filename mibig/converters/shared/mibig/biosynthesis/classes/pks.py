@@ -74,15 +74,16 @@ class PKS:
         return errors
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             subclass=raw["subclass"],
-            cyclases=[GeneId.from_json(c) for c in raw.get("cyclases", [])],
+            cyclases=[GeneId.from_json(c, **kwargs) for c in raw.get("cyclases", [])],
             starter_unit=Monomer.from_json(raw["starter_unit"])
             if "starter_unit" in raw
             else None,
             ketide_length=raw.get("ketide_length"),
             iterative=raw.get("iterative"),
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:

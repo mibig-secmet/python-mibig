@@ -11,17 +11,17 @@ class Thioesterase:
         'Type II',
     )
 
-    def __init__(self, subtype: str | None = None, validate: bool = True):
+    def __init__(self, subtype: str | None = None, validate: bool = True, **kwargs):
         self.subtype = subtype
 
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, **_) -> list[ValidationErrorInfo]:
         errors = []
 
         if self.subtype and self.subtype not in self.VALID_SUBTYPES:
@@ -30,9 +30,10 @@ class Thioesterase:
         return errors
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             subtype=raw.get("subtype"),
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:

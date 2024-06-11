@@ -36,9 +36,9 @@ class PksTransAtStarter:
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
-            carriers=[Domain.from_json(carrier) for carrier in raw["carriers"]],
+            carriers=[Domain.from_json(carrier, **kwargs) for carrier in raw["carriers"]],
             modification_domains=[
-                Domain.from_json(domain)
+                Domain.from_json(domain, **kwargs)
                 for domain in raw.get("modification_domains", [])
             ],
             **kwargs,
@@ -93,10 +93,10 @@ class PksTransAt:
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
-            ks_domain=Domain.from_json(raw["ks_domain"]),
-            carriers=[Domain.from_json(carrier) for carrier in raw["carriers"]],
+            ks_domain=Domain.from_json(raw["ks_domain"], **kwargs),
+            carriers=[Domain.from_json(carrier, **kwargs) for carrier in raw["carriers"]],
             modification_domains=[
-                Domain.from_json(domain)
+                Domain.from_json(domain, **kwargs)
                 for domain in raw.get("modification_domains", [])
             ],
             **kwargs,
@@ -152,10 +152,10 @@ class PksModularStarter:
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
-            at_domain=Domain.from_json(raw["at_domain"]),
-            carriers=[Domain.from_json(carrier) for carrier in raw["carriers"]],
+            at_domain=Domain.from_json(raw["at_domain"], **kwargs),
+            carriers=[Domain.from_json(carrier, **kwargs) for carrier in raw["carriers"]],
             modification_domains=[
-                Domain.from_json(domain)
+                Domain.from_json(domain, **kwargs)
                 for domain in raw.get("modification_domains", [])
             ],
             **kwargs,
@@ -198,11 +198,11 @@ class PksModular(PksTransAt):
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
-            at_domain=Domain.from_json(raw["at_domain"]),
-            ks_domain=Domain.from_json(raw["ks_domain"]),
-            carriers=[Domain.from_json(carrier) for carrier in raw["carriers"]],
+            at_domain=Domain.from_json(raw["at_domain"], **kwargs),
+            ks_domain=Domain.from_json(raw["ks_domain"], **kwargs),
+            carriers=[Domain.from_json(carrier, **kwargs) for carrier in raw["carriers"]],
             modification_domains=[
-                Domain.from_json(domain)
+                Domain.from_json(domain, **kwargs)
                 for domain in raw.get("modification_domains", [])
             ],
             **kwargs,

@@ -81,9 +81,9 @@ class NcaEvidence:
         return errors
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         refs = [Citation.from_json(c) for c in raw["references"]]
-        return cls(raw["method"], refs)
+        return cls(raw["method"], refs, **kwargs)
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -138,12 +138,13 @@ class NonCanonicalActivity:
         return errors
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
-            evidence=[NcaEvidence.from_json(evidence) for evidence in raw["evidence"]],
+            evidence=[NcaEvidence.from_json(evidence, **kwargs) for evidence in raw["evidence"]],
             iterations=raw.get("iterations"),
             non_elongating=raw.get("nonElongating"),
             skipped=raw.get("skipped"),
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -245,7 +246,7 @@ class Module:
         extra_info = MAPPING[ModuleType(module_type)].from_json(raw, **kwargs)
         nc_activity = None
         if raw.get("non_canonical_activity"):
-            nc_activity = NonCanonicalActivity.from_json(raw["non_canonical_activity"])
+            nc_activity = NonCanonicalActivity.from_json(raw["non_canonical_activity"], **kwargs)
 
         return cls(
             module_type=module_type,

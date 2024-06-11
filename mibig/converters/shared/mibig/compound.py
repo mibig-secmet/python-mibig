@@ -228,20 +228,25 @@ class Evidence:
         "NMR",
         "Mass spectrometry",
         "MS/MS",
-        "X-ray cristallography",
+        "X-ray crystallography",
         "Chemical derivatisation",
         "Total synthesis",
     )
 
-    def __init__(self, method: str, references: list[Citation], validate: bool = True) -> None:
+    def __init__(self, method: str, references: list[Citation], validate: bool = True, **kwargs) -> None:
         self.method = method
         self.references = references
 
         if not validate:
             return
 
-    def validate(self) -> list[ValidationErrorInfo]:
+        errors = self.validate(**kwargs)
+        if errors:
+            raise ValidationError(errors)
+
+    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
+        quality: QualityLevel | None = kwargs.get("quality")
 
         if self.method not in self.VALID_METHODS:
             errors.append(
@@ -251,13 +256,13 @@ class Evidence:
                 )
             )
 
-        errors.extend(validate_citation_list(self.references))
+        errors.extend(validate_citation_list(self.references, "Compound.evidence", quality=quality))
 
         return errors
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
-        return cls(raw["method"], [Citation.from_json(c) for c in raw["references"]])
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
+        return cls(raw["method"], [Citation.from_json(c) for c in raw["references"]], **kwargs)
 
     def to_json(self) -> dict[str, Any]:
         return {"method": self.method, "references": [r.to_json() for r in self.references]}

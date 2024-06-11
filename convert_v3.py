@@ -962,9 +962,9 @@ def convert_nrps_modules(
         c_domain = None
         if v3_module.condensation_type:
             if v3_module.condensation_type == "Unknown":
-                c = Condensation(None, [])
+                c = Condensation(None, [], quality=quality)
             else:
-                c = Condensation(v3_module.condensation_type, [])
+                c = Condensation(v3_module.condensation_type, [], quality=quality)
             c_domain = Domain(
                 DomainType.CONDENSATION,
                 gene_id,

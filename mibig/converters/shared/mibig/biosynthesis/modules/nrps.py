@@ -42,10 +42,10 @@ class NrpsTypeI:
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
-            a_domain=Domain.from_json(raw["a_domain"]),
-            carriers=[Domain.from_json(carrier) for carrier in raw["carriers"]],
-            c_domain=Domain.from_json(raw["c_domain"]) if "c_domain" in raw else None,
-            modification_domains=[Domain.from_json(domain) for domain in raw.get("modification_domains", [])],
+            a_domain=Domain.from_json(raw["a_domain"], **kwargs),
+            carriers=[Domain.from_json(carrier, **kwargs) for carrier in raw["carriers"]],
+            c_domain=Domain.from_json(raw["c_domain"], **kwargs) if "c_domain" in raw else None,
+            modification_domains=[Domain.from_json(domain, **kwargs) for domain in raw.get("modification_domains", [])],
             **kwargs,
         )
 

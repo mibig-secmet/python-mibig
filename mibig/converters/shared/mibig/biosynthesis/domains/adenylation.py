@@ -166,10 +166,10 @@ class Adenylation:
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             substrates=[
-                AdenylationSubstrate.from_json(sub) for sub in raw["substrates"]
+                AdenylationSubstrate.from_json(sub) for sub in raw.get("substrates", [])
             ],
             evidence=[
-                SubstrateEvidence.from_json(ev) for ev in raw.get("evidence", [])
+                SubstrateEvidence.from_json(ev, **kwargs) for ev in raw.get("evidence", [])
             ],
             precursor_biosynthesis=[
                 GeneId.from_json(gene, **kwargs)

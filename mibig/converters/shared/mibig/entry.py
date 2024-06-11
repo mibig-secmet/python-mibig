@@ -144,7 +144,7 @@ class MibigEntry:
         quality = QualityLevel(raw["quality"])
         status = StatusLevel(raw["status"])
         completeness = CompletenessLevel(raw["completeness"])
-        loci = [Locus.from_json(locus) for locus in raw["loci"]]
+        loci = [Locus.from_json(locus, quality=quality) for locus in raw["loci"]]
         compounds = [Compound.from_json(c, quality=quality) for c in raw["compounds"]]
         taxonomy = Taxonomy.from_json(raw["taxonomy"])
         genes = (

@@ -102,7 +102,7 @@ class Operon:
         return cls(
             genes=[GeneId.from_json(gene) for gene in raw["genes"]],
             evidence=[
-                OperonEvidence.from_json(evidence) for evidence in raw["evidence"]
+                OperonEvidence.from_json(evidence, **kwargs) for evidence in raw["evidence"]
             ],
             **kwargs,
         )
@@ -194,7 +194,7 @@ class Biosynthesis:
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
-            classes=[BiosynthesisClass.from_json(cls) for cls in raw["classes"]],
+            classes=[BiosynthesisClass.from_json(cls, **kwargs) for cls in raw["classes"]],
             modules=[
                 Module.from_json(module, **kwargs) for module in raw.get("modules", [])
             ],
@@ -202,7 +202,7 @@ class Biosynthesis:
                 Operon.from_json(operons, **kwargs)
                 for operons in raw.get("operons", [])
             ],
-            paths=[Path.from_json(path) for path in raw["paths"]],
+            paths=[Path.from_json(path) for path in raw.get("paths", [])],
             **kwargs,
         )
 

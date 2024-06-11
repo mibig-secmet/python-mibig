@@ -6,18 +6,18 @@ class Other:
     subtype: str
     active: bool | None
 
-    def __init__(self, subtype: str, active: bool | None = None, validate: bool = True):
+    def __init__(self, subtype: str, active: bool | None = None, validate: bool = True, **kwargs):
         self.subtype = subtype
         self.active = active
 
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, **_) -> list[ValidationErrorInfo]:
         errors = []
         if not self.subtype:
             errors.append(ValidationErrorInfo("Other.subtype", "Missing required subtype"))
@@ -25,10 +25,11 @@ class Other:
         return errors
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             subtype=raw["subtype"],
             active=raw.get("active"),
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:

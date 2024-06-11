@@ -71,7 +71,7 @@ class ATSubstrate:
         return cls(
             name=raw["name"],
             details=raw.get("details"),
-            structure=Smiles.from_json(raw.get("structure", "")),
+            structure=Smiles.from_json(raw["structure"]) if "structure" in raw else None,
             **kwargs,
         )
 
@@ -159,8 +159,8 @@ class Acyltransferase:
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
-            substrates=[ATSubstrate.from_json(sub) for sub in raw["substrates"]],
-            evidence=[SubstrateEvidence.from_json(ev) for ev in raw["evidence"]],
+            substrates=[ATSubstrate.from_json(sub, **kwargs) for sub in raw["substrates"]],
+            evidence=[SubstrateEvidence.from_json(ev, **kwargs) for ev in raw["evidence"]],
             inactive=raw.get("inactive"),
             **kwargs,
         )
