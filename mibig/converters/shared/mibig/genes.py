@@ -9,8 +9,8 @@ from mibig.converters.shared.common import (
     QualityLevel,
     validate_citation_list,
 )
-from mibig.converters.shared.mibig.gene import Domain
-from mibig.converters.shared.mibig.gene.function import GeneFunction
+from mibig.converters.shared.mibig.biosynthesis.domains.base import Domain
+from mibig.converters.shared.mibig.gene.function import GeneFunction, MutationPhenotype
 from mibig.errors import ValidationError, ValidationErrorInfo
 
 
@@ -264,6 +264,8 @@ class Annotation:
     functions: list[GeneFunction] | None
     tailoring_functions: list[TailoringFunction] | None
     domains: list[Domain] | None
+    mutation_phenotype: MutationPhenotype | None
+    comment: str | None
 
     def __init__(
         self,
@@ -274,6 +276,8 @@ class Annotation:
         functions: list[GeneFunction] | None = None,
         tailoring_functions: list[TailoringFunction] | None = None,
         domains: list[Domain] | None = None,
+        mutation_phenotype: MutationPhenotype | None = None,
+        comment: str | None = None,
         validate: bool = True,
         **kwargs,
     ):
@@ -284,6 +288,8 @@ class Annotation:
         self.functions = functions
         self.tailoring_functions = tailoring_functions
         self.domains = domains
+        self.mutation_phenotype = mutation_phenotype
+        self.comment = comment
 
         if not validate:
             return
@@ -309,6 +315,8 @@ class Annotation:
         if self.domains:
             for domain in self.domains:
                 errors.extend(domain.validate(**kwargs))
+        if self.mutation_phenotype:
+            errors.extend(self.mutation_phenotype.validate(**kwargs))
         return errors
 
     @classmethod
@@ -320,10 +328,11 @@ class Annotation:
             product=raw.get("product"),
             functions=[GeneFunction.from_json(f) for f in raw.get("functions", [])],
             tailoring_functions=[
-                TailoringFunction.from_json(f)
-                for f in raw.get("tailoring_functions", [])
+                TailoringFunction.from_json(f, **kwargs) for f in raw.get("tailoring_functions", [])
             ],
-            domains=[Domain.from_json(d) for d in raw.get("domains", [])],
+            domains=[Domain.from_json(d, **kwargs) for d in raw.get("domains", [])],
+            mutation_phenotype=MutationPhenotype.from_json(raw["mutation_phenotype"], **kwargs) if "mutation_phenotype" in raw else None,
+            comment=raw.get("comment"),
             **kwargs,
         )
 
@@ -341,8 +350,15 @@ class Annotation:
             ret["tailoring_functions"] = [f.to_json() for f in self.tailoring_functions]
         if self.domains:
             ret["domains"] = [d.to_json() for d in self.domains]
+        if self.mutation_phenotype:
+            ret["mutation_phenotype"] = self.mutation_phenotype.to_json()
+        if self.comment:
+            ret["comment"] = self.comment
 
         return ret
+
+    def __str__(self) -> str:
+        return f"{self.id}({self.name})"
 
 
 class Genes:

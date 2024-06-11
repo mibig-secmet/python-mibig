@@ -292,12 +292,24 @@ def convert_genes(v3_data: Everything, biosynthesis: Biosynthesis) -> Genes | No
             )
             domains.append(domain)
 
+        mutation_phenotype = None
+        if v3_gene.mutation_phenotype:
+            mutation_phenotype = MutationPhenotype(
+                phenotype=v3_gene.mutation_phenotype,
+                references=[],
+                quality=quality,
+            )
+
+        comment = v3_gene.comments
+
         annotation = Annotation(
             id=gene_id,
             name=name,
             aliases=aliases,
             product=product,
             domains=domains,
+            mutation_phenotype=mutation_phenotype,
+            comment=comment,
             quality=quality,
         )
         annotations.append(annotation)

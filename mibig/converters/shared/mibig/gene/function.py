@@ -1,6 +1,6 @@
 from typing import Any, Self
 
-from mibig.converters.shared.common import Citation, validate_citation_list
+from mibig.converters.shared.common import Citation, QualityLevel, validate_citation_list
 from mibig.errors import ValidationError, ValidationErrorInfo
 
 
@@ -64,9 +64,10 @@ class MutationPhenotype:
 
     def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
+        quality: QualityLevel | None = kwargs.get("quality")
         if not self.phenotype:
             errors.append(ValidationErrorInfo("MutationPhenotype.phenotype", "Phenotype must be provided"))
-        errors.extend(validate_citation_list(self.references))
+        errors.extend(validate_citation_list(self.references, "MutationPhenotype.references", quality=quality))
         return errors
 
     @classmethod
