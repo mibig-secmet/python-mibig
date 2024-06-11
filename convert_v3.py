@@ -180,6 +180,10 @@ def main():
         for see in v3_data.cluster.see_also:
             see_also.append(see)
 
+    legacy_refs = []
+    for v3_ref in v3_data.cluster.publications:
+        legacy_refs.append(Citation(v3_ref.category, v3_ref.content))
+
     entry = MibigEntry(
         accession=v3_data.cluster.mibig_accession,
         version=len(changelog.releases) + 1,
@@ -196,6 +200,7 @@ def main():
         see_also=see_also,
         comment=v3_data.comments,
     )
+    entry._legacy_references = legacy_refs
     args.output.write(orjson.dumps(entry.to_json()))
 
 

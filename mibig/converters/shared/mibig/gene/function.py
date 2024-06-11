@@ -168,3 +168,14 @@ class GeneFunction:
 
         return ret
 
+    @property
+    def references(self) -> list[Citation]:
+        publications = set()
+        for evidence in self.evidence:
+            publications.update(evidence.references)
+
+        if self.mutation_phenotype:
+            publications.update(self.mutation_phenotype.references)
+
+        return sorted(list(publications))
+

@@ -365,6 +365,22 @@ class Annotation:
     def __str__(self) -> str:
         return f"{self.id}({self.name})"
 
+    @property
+    def references(self) -> list[Citation]:
+        publications = set()
+        if self.functions:
+            for function in self.functions:
+                publications.update(function.references)
+        if self.tailoring_functions:
+            for function in self.tailoring_functions:
+                publications.update(function.references)
+        if self.domains:
+            for domain in self.domains:
+                publications.update(domain.references)
+        if self.mutation_phenotype:
+            publications.update(self.mutation_phenotype.references)
+        return sorted(list(publications))
+
 
 class Genes:
     to_add: list[Addition] | None
@@ -426,3 +442,11 @@ class Genes:
             ret["annotations"] = [a.to_json() for a in self.annotations]
 
         return ret
+
+    @property
+    def references(self) -> list[Citation]:
+        publications = set()
+        if self.annotations:
+            for annotation in self.annotations:
+                publications.update(annotation.references)
+        return sorted(list(publications))

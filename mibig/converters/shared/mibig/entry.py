@@ -30,6 +30,7 @@ class MibigEntry:
     retirement_reasons: list[str]
     see_also: list[str]
     comment: str | None
+    _legacy_references: list[Citation]
 
     ENTRY_PATTERN = re.compile(r"^(BGC\d{7,7}|new\r{3,3})$")
 
@@ -49,6 +50,7 @@ class MibigEntry:
         retirement_reasons: list[str] | None = None,
         see_also: list[str] | None = None,
         comment: str | None = None,
+        _legacy_references: list[Citation] | None = None,
         validate: bool = True,
         **kwargs,
     ) -> None:
@@ -66,6 +68,7 @@ class MibigEntry:
         self.retirement_reasons = retirement_reasons or []
         self.see_also = see_also or []
         self.comment = comment
+        self._legacy_references = _legacy_references or []
 
         if not validate:
             return
@@ -106,6 +109,14 @@ class MibigEntry:
         if self.genes:
             errors.extend(self.genes.validate(quality=self.quality, **kwargs))
 
+        if self.quality > QualityLevel.QUESTIONABLE and self._legacy_references:
+            errors.append(
+                ValidationErrorInfo(
+                    "MibigEntry._legacy_references",
+                    "Legacy references are only allowed for questionable entries",
+                )
+            )
+
         return errors
 
     def __str__(self) -> str:
@@ -136,6 +147,8 @@ class MibigEntry:
         if self.genes:
             publications.update(self.genes.references)
 
+        publications.update(self._legacy_references)
+
         return sorted(list(publications))
 
     @classmethod
@@ -155,6 +168,9 @@ class MibigEntry:
         biosynthesis = Biosynthesis.from_json(
             raw["biosynthesis"], quality=quality, **kwargs
         )
+        legacy_references = [
+            Citation.from_json(reference) for reference in raw.get("legacy_references", [])
+        ]
 
         return cls(
             raw["accession"],
@@ -171,6 +187,7 @@ class MibigEntry:
             raw.get("retirement_reasons"),
             raw.get("see_also"),
             raw.get("comment"),
+            _legacy_references=legacy_references,
             **kwargs,
         )
 
@@ -199,5 +216,8 @@ class MibigEntry:
 
         if self.comment:
             ret["comment"] = self.comment
+
+        if self._legacy_references:
+            ret["legacy_references"] = [ref.to_json() for ref in self._legacy_references]
 
         return ret
