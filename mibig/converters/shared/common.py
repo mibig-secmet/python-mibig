@@ -162,6 +162,9 @@ class NovelGeneId:
     def to_json(self) -> str:
         return self._inner
 
+    def __lt__(self, other: Self) -> bool:
+        return self._inner < other._inner
+
 
 class GeneId(NovelGeneId):
     def validate(
