@@ -291,6 +291,14 @@ class Ribosomal:
                     )
                 )
 
+        if quality and quality >= QualityLevel.MEDIUM:
+            if not self.precursors:
+                errors.append(
+                    ValidationErrorInfo(
+                        "Ribosomal.precursors", f"At least one precursor is required at quality level {quality.value}"
+                    )
+                )
+
         for precursor in self.precursors:
             errors.extend(precursor.validate(**kwargs))
 

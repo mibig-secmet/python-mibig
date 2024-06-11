@@ -10,11 +10,20 @@ from mibig.validation import ValidationErrorInfo
 from mibig.utils import CDS, INVALID_CHARS, Record
 
 
+@total_ordering
 class QualityLevel(Enum):
     QUESTIONABLE = "questionable"
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
+
+    def __lt__(self, other: Self) -> bool:
+        if self.__class__ != other.__class__:
+            return NotImplemented
+
+        values = list(self.__class__)
+
+        return values.index(self) < values.index(other)
 
 
 class Location:
