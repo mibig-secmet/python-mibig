@@ -3,8 +3,9 @@
 
 from argparse import ArgumentParser, FileType
 from datetime import date
-import json
 import sys
+
+import orjson
 
 from mibig.converters.shared.common import (
     ChangeLog,
@@ -143,17 +144,17 @@ def main():
     parser = ArgumentParser(description="Convert MIBiG v3 JSON to MIBiG v4 JSON")
     parser.add_argument(
         "input",
-        type=FileType("r", encoding="utf-8"),
+        type=FileType("rb"),
         help="Input JSON file (MIBiG v3 format)",
     )
     parser.add_argument(
         "output",
-        type=FileType("w", encoding="utf-8"),
+        type=FileType("wb"),
         help="Output JSON file (MIBiG v4 format)",
     )
     args = parser.parse_args()
 
-    v3_data = Everything(json.load(args.input))
+    v3_data = Everything(orjson.loads(args.input.read()))
 
     changelog = convert_changelog(v3_data)
 
@@ -194,7 +195,7 @@ def main():
         see_also=see_also,
         comment=v3_data.comments,
     )
-    json.dump(entry.to_json(), args.output, indent=2)
+    args.output.write(orjson.dumps(entry.to_json()))
 
 
 def convert_genes(v3_data: Everything, biosynthesis: Biosynthesis) -> Genes | None:
