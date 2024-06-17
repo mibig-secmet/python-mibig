@@ -17,6 +17,7 @@ class OperonEvidence:
         "RACE",
         "ChIPseq",
         "RNAseq",
+        "rt-PCR",
     }
 
     def __init__(
@@ -100,7 +101,7 @@ class Operon:
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
-            genes=[GeneId.from_json(gene) for gene in raw["genes"]],
+            genes=[GeneId.from_json(gene, **kwargs) for gene in raw["genes"]],
             evidence=[
                 OperonEvidence.from_json(evidence, **kwargs) for evidence in raw["evidence"]
             ],
