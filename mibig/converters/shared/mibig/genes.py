@@ -313,10 +313,10 @@ class Annotation:
                 errors.extend(alias.validate(**kwargs))
         if self.functions:
             for function in self.functions:
-                errors.extend(function.validate())
+                errors.extend(function.validate(**kwargs))
         if self.tailoring_functions:
             for function in self.tailoring_functions:
-                errors.extend(function.validate())
+                errors.extend(function.validate(**kwargs))
         if self.domains:
             for domain in self.domains:
                 errors.extend(domain.validate(**kwargs))
@@ -331,7 +331,7 @@ class Annotation:
             name=NovelGeneId.from_json(raw["name"]) if "name" in raw else None,
             aliases=[NovelGeneId.from_json(alias) for alias in raw.get("aliases", [])],
             product=raw.get("product"),
-            functions=[GeneFunction.from_json(f) for f in raw.get("functions", [])],
+            functions=[GeneFunction.from_json(f, **kwargs) for f in raw.get("functions", [])],
             tailoring_functions=[
                 TailoringFunction.from_json(f, **kwargs) for f in raw.get("tailoring_functions", [])
             ],

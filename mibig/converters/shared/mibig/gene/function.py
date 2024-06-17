@@ -15,22 +15,23 @@ class FunctionEvidence:
         "Activity assay"
     )
 
-    def __init__(self, method: str, references: list[Citation], validate: bool = True):
+    def __init__(self, method: str, references: list[Citation], validate: bool = True, **kwargs):
         self.method = method
         self.references = references
 
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
+        quality: QualityLevel | None = kwargs.get("quality")
         if self.method not in self.VALID_METHODS:
             errors.append(ValidationErrorInfo("method", f"Invalid method: {self.method}"))
-        errors.extend(validate_citation_list(self.references))
+        errors.extend(validate_citation_list(self.references, "FunctionEvidence.references", quality=quality))
         return errors
 
     @classmethod
@@ -146,9 +147,9 @@ class GeneFunction:
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             function=raw["function"]["name"],
-            evidence=[FunctionEvidence.from_json(evidence) for evidence in raw["evidence"]],
+            evidence=[FunctionEvidence.from_json(evidence, **kwargs) for evidence in raw["evidence"]],
             details=raw["function"].get("details"),
-            mutation_phenotype=MutationPhenotype.from_json(raw["mutation_phenotype"]) if "mutation_phenotype" in raw else None,
+            mutation_phenotype=MutationPhenotype.from_json(raw["mutation_phenotype"], **kwargs) if "mutation_phenotype" in raw else None,
             **kwargs,
         )
 

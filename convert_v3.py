@@ -110,7 +110,7 @@ from mibig.converters.shared.mibig.common import (
     Taxonomy,
 )
 from mibig.converters.shared.mibig.compound import Compound, CompoundRef, Evidence as CompoundEvidence, Formula
-from mibig.converters.shared.mibig.gene.function import MutationPhenotype
+from mibig.converters.shared.mibig.gene.function import FunctionEvidence, GeneFunction, MutationPhenotype
 from mibig.converters.shared.mibig.genes import (
     Addition,
     Annotation,
@@ -307,10 +307,41 @@ def convert_genes(v3_data: Everything, biosynthesis: Biosynthesis) -> Genes | No
 
         comment = v3_gene.comments
 
+        functions = []
+        for v3_function in v3_gene.functions:
+            evidence = []
+            for ev in v3_function.evidence:
+                if ev == "Sequence-based prediction":
+                    # We don't do predictions for evidence anymore
+                    continue
+                evidence.append(
+                    FunctionEvidence(
+                        method=ev,
+                        references=[],
+                        quality=quality,
+                    )
+                )
+
+            cat = v3_function.category
+            if cat == "Unknown":
+                print(f"Function category for gene {gene_id} is 'Unknown', evidence: {v3_function.evidence}")
+                continue
+
+            function = GeneFunction(
+                function=cat,
+                evidence=evidence,
+                quality=quality,
+            )
+            functions.append(function)
+
+        tailoring_functions = []
+
         annotation = Annotation(
             id=gene_id,
             name=name,
             aliases=aliases,
+            functions=functions,
+            tailoring_functions=tailoring_functions,
             product=product,
             domains=domains,
             mutation_phenotype=mutation_phenotype,
