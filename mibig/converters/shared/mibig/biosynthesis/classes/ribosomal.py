@@ -97,7 +97,7 @@ class Precursor:
     gene: GeneId
     core_sequence: str
     leader_cleavage_location: Location | None
-    follower_clavage_location: Location | None
+    follower_cleavage_location: Location | None
     crosslinks: list[Crosslink]
     recognition_motif: str | None
 
@@ -106,7 +106,7 @@ class Precursor:
         gene: GeneId,
         core_sequence: str,
         leader_cleavage_location: Location | None,
-        follower_clavage_location: Location | None,
+        follower_cleavage_location: Location | None,
         crosslinks: list[Crosslink],
         recognition_motif: str | None = None,
         validate: bool = True,
@@ -115,7 +115,7 @@ class Precursor:
         self.gene = gene
         self.core_sequence = core_sequence
         self.leader_cleavage_location = leader_cleavage_location
-        self.follower_clavage_location = follower_clavage_location
+        self.follower_cleavage_location = follower_cleavage_location
         self.crosslinks = crosslinks
         self.recognition_motif = recognition_motif
 
@@ -137,8 +137,8 @@ class Precursor:
 
         if self.leader_cleavage_location:
             errors.extend(self.leader_cleavage_location.validate(**kwargs))
-        if self.follower_clavage_location:
-            errors.extend(self.follower_clavage_location.validate(**kwargs))
+        if self.follower_cleavage_location:
+            errors.extend(self.follower_cleavage_location.validate(**kwargs))
         for crosslink in self.crosslinks:
             errors.extend(crosslink.validate(cds))
 
@@ -152,20 +152,20 @@ class Precursor:
             record: Record = kwargs["record"]
             cds = record.get_cds(str(gene))
         leader_cleavage_location = None
-        follower_clavage_location = None
+        follower_cleavage_location = None
         if "leader_cleavage_location" in raw:
             leader_cleavage_location = Location.from_json(
                 raw["leader_cleavage_location"], **kwargs
             )
-        if "follower_clavage_location" in raw:
-            follower_clavage_location = Location.from_json(
-                raw["follower_clavage_location"], **kwargs
+        if "follower_cleavage_location" in raw:
+            follower_cleavage_location = Location.from_json(
+                raw["follower_cleavage_location"], **kwargs
             )
         return cls(
             gene=gene,
             core_sequence=raw["core_sequence"],
             leader_cleavage_location=leader_cleavage_location,
-            follower_clavage_location=follower_clavage_location,
+            follower_clavage_location=follower_cleavage_location,
             crosslinks=[
                 Crosslink.from_json(crosslink, cds=cds)
                 for crosslink in raw.get("crosslinks", [])
@@ -182,8 +182,8 @@ class Precursor:
             ret["crosslinks"] = [crosslink.to_json() for crosslink in self.crosslinks]
         if self.leader_cleavage_location:
             ret["leader_cleavage_location"] = self.leader_cleavage_location.to_json()
-        if self.follower_clavage_location:
-            ret["follower_clavage_location"] = self.follower_clavage_location.to_json()
+        if self.follower_cleavage_location:
+            ret["follower_cleavage_location"] = self.follower_cleavage_location.to_json()
         if self.recognition_motif:
             ret["recognition_motif"] = self.recognition_motif
 
