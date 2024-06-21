@@ -501,7 +501,7 @@ class Smiles:
 
         if not re.match(r"^[\[\]a-zA-Z0-9\@()=\/\\#+.%*-]+$", self.value):
             errors.append(
-                ValidationErrorInfo("Smiles", f"Invalid value {self.value:r}")
+                ValidationErrorInfo("Smiles", f"Invalid value {self.value!r}")
             )
 
         return errors
