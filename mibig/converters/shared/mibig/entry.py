@@ -32,7 +32,7 @@ class MibigEntry:
     comment: str | None
     _legacy_references: list[Citation]
 
-    ENTRY_PATTERN = re.compile(r"^(BGC\d{7,7}|new\r{3,3})$")
+    ENTRY_PATTERN = re.compile(r"^(BGC\d{7,7}|new\d{3,3})$")
 
     def __init__(
         self,
