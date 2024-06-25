@@ -15,6 +15,7 @@ class Terpene:
         "Hemiterpene",
         "Monoterpene",
         "Sesquiterpene",
+        "Sesterterpene",
         "Triterpene",
     )
 

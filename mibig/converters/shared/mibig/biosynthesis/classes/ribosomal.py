@@ -213,6 +213,7 @@ class Ribosomal:
         "Dikaritin",
         "Epipeptide",
         "Glycocin",
+        "Graspetide",
         "Guanidinotide",
         "Head-to-tail cyclized peptide",
         "Lanthipeptide",
