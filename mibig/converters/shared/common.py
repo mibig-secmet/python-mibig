@@ -305,6 +305,7 @@ class ReleaseEntry:
         date: datetime.date,
         comment: str,
         validate: bool = True,
+        **kwargs,
     ) -> None:
         self.contributors = contributors
         self.reviewers = reviewers
@@ -314,15 +315,20 @@ class ReleaseEntry:
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
+        quality: QualityLevel | None = kwargs.get("quality")
         if not self.contributors:
             errors.append(
                 ValidationErrorInfo("contributors", "contributor list cannot be empty")
+            )
+        if quality != QualityLevel.QUESTIONABLE and not self.reviewers:
+            errors.append(
+                ValidationErrorInfo("reviewers", "reviewer list cannot be empty")
             )
         for contributor in self.contributors:
             errors.extend(contributor.validate())
@@ -399,6 +405,7 @@ class Release:
         date: datetime.date | None,
         entries: list[ReleaseEntry],
         validate: bool = True,
+        **kwargs,
     ) -> None:
         self.version = version
         self.date = date
@@ -407,7 +414,11 @@ class Release:
         if not validate:
             return
 
-    def validate(self) -> list[ValidationErrorInfo]:
+        errors = self.validate(**kwargs)
+        if errors:
+            raise ValidationError(errors)
+
+    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
 
         errors.extend(self.version.validate())
@@ -420,7 +431,7 @@ class Release:
             )
 
         for entry in self.entries:
-            errors.extend(entry.validate())
+            errors.extend(entry.validate(**kwargs))
 
         return errors
 
@@ -440,12 +451,12 @@ class Release:
         return ret
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         version = ReleaseVersion.from_json(raw["version"])
         date = (
             datetime.datetime.strptime(raw["date"], "%Y-%m-%d") if raw["date"] else None
         )
-        entries = [ReleaseEntry.from_json(e) for e in raw["entries"]]
+        entries = [ReleaseEntry.from_json(e, **kwargs) for e in raw["entries"]]
 
         return cls(version, date, entries)
 
@@ -453,21 +464,21 @@ class Release:
 class ChangeLog:
     releases: list[Release]
 
-    def __init__(self, releases: list[Release], validate: bool = True) -> None:
+    def __init__(self, releases: list[Release], validate: bool = True, **kwargs) -> None:
         self.releases = releases
 
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
 
         for release in self.releases:
-            errors.extend(release.validate())
+            errors.extend(release.validate(**kwargs))
 
         return errors
 
@@ -478,8 +489,8 @@ class ChangeLog:
         return {"releases": [r.to_json() for r in self.releases]}
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
-        releases = [Release.from_json(r) for r in raw["releases"]]
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
+        releases = [Release.from_json(r, **kwargs) for r in raw["releases"]]
         return cls(releases)
 
 
