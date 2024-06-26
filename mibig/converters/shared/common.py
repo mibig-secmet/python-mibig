@@ -235,6 +235,11 @@ class Citation:
     def __hash__(self) -> int:
         return hash((self.database, self.value))
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Citation):
+            return False
+        return other.database == self.database and other.value == self.value
+
 
 def validate_citation_list(
     citations: list[Citation],
