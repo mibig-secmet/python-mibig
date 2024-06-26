@@ -21,6 +21,7 @@ class NRPSGene:
     def __init__(self,module_number: str, gene_names: List[str], core_domains: List[str],
                  specificities: List[SpecificityBase] = None, modification_domains: List[str] = None,
                  non_canonical: NonCanonical = None, comments: str = ""):
+        pass
 
 class NRPSModule:
     CONDENSATIONS = {"Dual", "Starter", "LCL", "Unknown", "DCL", "Ester bond-forming", "Heterocyclization"}
@@ -36,7 +37,7 @@ class NRPSModule:
 
     def to_json(self):
         result = super().to_json()
-        if self.condensation
+        raise NotImplementedError()
 
 
 class Specificity(SpecificityBase):
