@@ -579,7 +579,7 @@ def convert_ribosomal(v3_data: Everything, quality: QualityLevel) -> Ribosomal:
             core_sequence=v3_pre.core_sequence,
             crosslinks=crosslinks,
             leader_cleavage_location=leader_cleavage_location,
-            follower_clavage_location=follower_cleavage_location,
+            follower_cleavage_location=follower_cleavage_location,
         )
         precursors.append(precursor)
 
