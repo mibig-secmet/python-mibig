@@ -152,6 +152,7 @@ class CompoundClass:
             "Meroterpenoid",
             "Monoterpenoid",
             "Sesquiterpenoid",
+            "Sesterterpenoid",
             "Steroid",
         ),
         "Peptide": (
@@ -306,6 +307,7 @@ class CompoundRef:
                     field="compound.database",
                 )
             )
+            return errors
 
         if not re.match(self.VALID_DATABASE_PATTERNS[self.database], self.identifier):
             errors.append(
