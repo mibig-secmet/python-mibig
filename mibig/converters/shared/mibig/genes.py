@@ -97,9 +97,12 @@ class Addition:
         if self.translation and not all(
             aa in self.VALID_AMINO_ACIDS for aa in self.translation
         ):
+            invalid_aas = list(filter(
+                lambda aa: aa not in self.VALID_AMINO_ACIDS, self.translation
+            ))
             errors.append(
                 ValidationErrorInfo(
-                    "Genes.Addition.translation", "Invalid amino acid in translation"
+                    "Genes.Addition.translation", f"Invalid amino acid(s) in translation: {invalid_aas}"
                 )
             )
 
