@@ -79,6 +79,7 @@ class MibigEntry:
 
     def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
+        quality: QualityLevel = kwargs.get("quality") or self.quality
         if not self.ENTRY_PATTERN.match(self.accession):
             errors.append(
                 ValidationErrorInfo(
@@ -94,22 +95,24 @@ class MibigEntry:
                 )
             )
 
-        errors.extend(self.changelog.validate())
+        kwargs["quality"] = quality
+
+        errors.extend(self.changelog.validate(**kwargs))
 
         for locus in self.loci:
-            errors.extend(locus.validate(quality=self.quality, **kwargs))
+            errors.extend(locus.validate(**kwargs))
 
-        errors.extend(self.biosynthesis.validate(quality=self.quality, **kwargs))
+        errors.extend(self.biosynthesis.validate(**kwargs))
 
         for compound in self.compounds:
-            errors.extend(compound.validate(quality=self.quality, **kwargs))
+            errors.extend(compound.validate(**kwargs))
 
         errors.extend(self.taxonomy.validate(**kwargs))
 
         if self.genes:
-            errors.extend(self.genes.validate(quality=self.quality, **kwargs))
+            errors.extend(self.genes.validate(**kwargs))
 
-        if self.quality > QualityLevel.QUESTIONABLE and self._legacy_references:
+        if quality > QualityLevel.QUESTIONABLE and self._legacy_references:
             errors.append(
                 ValidationErrorInfo(
                     "MibigEntry._legacy_references",
@@ -153,8 +156,8 @@ class MibigEntry:
 
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
-        changelog = ChangeLog.from_json(raw["changelog"])
         quality = QualityLevel(raw["quality"])
+        changelog = ChangeLog.from_json(raw["changelog"], quality=quality)
         status = StatusLevel(raw["status"])
         completeness = CompletenessLevel(raw["completeness"])
         loci = [Locus.from_json(locus, quality=quality) for locus in raw["loci"]]
