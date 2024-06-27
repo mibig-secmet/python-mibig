@@ -13,13 +13,6 @@ class CompletenessLevel(Enum):
     COMPLETE = "complete"
 
 
-class StatusLevel(Enum):
-    PENDING = "pending"
-    EMBARGOED = "embargoed"
-    ACTIVE = "active"
-    RETIRED = "retired"
-
-
 class SubstrateEvidence:
     VALID_METHODS = {
         "Activity assay",

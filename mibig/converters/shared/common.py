@@ -26,6 +26,13 @@ class QualityLevel(Enum):
         return values.index(self) < values.index(other)
 
 
+class StatusLevel(Enum):
+    PENDING = "pending"
+    EMBARGOED = "embargoed"
+    ACTIVE = "active"
+    RETIRED = "retired"
+
+
 class Location:
     begin: int
     end: int
@@ -408,7 +415,7 @@ class ReleaseEntry:
             errors.append(
                 ValidationErrorInfo("contributors", "contributor list cannot be empty")
             )
-        if quality != QualityLevel.QUESTIONABLE and not self.reviewers:
+        if quality != QualityLevel.QUESTIONABLE not self.reviewers:
             errors.append(
                 ValidationErrorInfo("reviewers", "reviewer list cannot be empty")
             )

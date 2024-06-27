@@ -2,13 +2,12 @@ from functools import cached_property
 import re
 from typing import Any, Self
 
-from mibig.converters.shared.common import ChangeLog, Citation
+from mibig.converters.shared.common import ChangeLog, Citation, StatusLevel
 from mibig.converters.shared.mibig.biosynthesis import Biosynthesis
 from mibig.converters.shared.mibig.common import (
     Locus,
     Taxonomy,
     QualityLevel,
-    StatusLevel,
     CompletenessLevel,
 )
 from mibig.converters.shared.mibig.compound import Compound

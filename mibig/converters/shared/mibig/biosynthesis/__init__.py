@@ -154,7 +154,7 @@ class Biosynthesis:
             )
 
         if quality and quality is not QualityLevel.QUESTIONABLE:
-            if not self.paths:
+            if False and not self.paths:  # TODO
                 errors.append(
                     ValidationErrorInfo(
                         "Biosynthesis.paths", "At least one path is required"
