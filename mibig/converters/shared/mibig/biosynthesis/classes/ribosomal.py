@@ -165,7 +165,7 @@ class Precursor:
             gene=gene,
             core_sequence=raw["core_sequence"],
             leader_cleavage_location=leader_cleavage_location,
-            follower_clavage_location=follower_cleavage_location,
+            follower_cleavage_location=follower_cleavage_location,
             crosslinks=[
                 Crosslink.from_json(crosslink, cds=cds)
                 for crosslink in raw.get("crosslinks", [])
