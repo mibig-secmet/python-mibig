@@ -2,13 +2,13 @@ from typing import Any, Self
 
 from mibig.converters.shared.common import QualityLevel, Smiles
 from mibig.converters.shared.mibig.common import SubstrateEvidence
-from mibig.errors import ValidationError, ValidationErrorInfo
+from mibig.errors import ValidationErrorInfo
+
+from .core import DomainInfo, Substrate
 
 
-class ATSubstrate:
-    name: str
+class ATSubstrate(Substrate):
     details: str | None = None
-    structure: Smiles | None = None
 
     VALID_NAMES = (
         "acetyl-CoA",
@@ -24,28 +24,13 @@ class ATSubstrate:
         name: str,
         details: str | None = None,
         structure: Smiles | None = None,
-        validate: bool = True,
         **kwargs,
     ) -> None:
-        self.name = name
+        super().__init__(name, structure, **kwargs)
         self.details = details
-        self.structure = structure
-
-        if not validate:
-            return
-
-        errors = self.validate(**kwargs)
-        if errors:
-            raise ValidationError(errors)
 
     def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
-        if self.name not in self.VALID_NAMES:
-            errors.append(
-                ValidationErrorInfo(
-                    "ATSubstrate.name", f"Invalid substrate name: {self.name}"
-                )
-            )
 
         if self.name == "other":
             if not self.details:
@@ -76,17 +61,13 @@ class ATSubstrate:
         )
 
     def to_json(self) -> dict[str, Any]:
-        ret = {
-            "name": self.name,
-        }
+        ret = super().to_json()
         if self.details:
             ret["details"] = self.details
-        if self.structure:
-            ret["structure"] = self.structure.to_json()
         return ret
 
 
-class Acyltransferase:
+class Acyltransferase(DomainInfo):
     subtype: str | None = None
     substrates: list[ATSubstrate]
     evidence: list[SubstrateEvidence]
@@ -108,13 +89,7 @@ class Acyltransferase:
         self.substrates = substrates
         self.evidence = evidence
         self.inactive = inactive
-
-        if not validate:
-            return
-
-        errors = self.validate(**kwargs)
-        if errors:
-            raise ValidationError(errors)
+        super().__init__(self.subtype, **kwargs)
 
     def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
@@ -158,7 +133,9 @@ class Acyltransferase:
 
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
+        subtype = raw.get("subtype")
         return cls(
+            subtype=subtype,
             substrates=[ATSubstrate.from_json(sub, **kwargs) for sub in raw["substrates"]],
             evidence=[SubstrateEvidence.from_json(ev, **kwargs) for ev in raw["evidence"]],
             inactive=raw.get("inactive"),
@@ -166,12 +143,11 @@ class Acyltransferase:
         )
 
     def to_json(self) -> dict[str, Any]:
-        ret: dict[str, Any] = {
+        ret = super().to_json()
+        ret.update({
             "substrates": [sub.to_json() for sub in self.substrates],
             "evidence": [ev.to_json() for ev in self.evidence],
-        }
-        if self.subtype:
-            ret["subtype"] = self.subtype
+        })
         if self.inactive:
             ret["inactive"] = self.inactive
         return ret

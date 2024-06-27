@@ -1,10 +1,9 @@
 from typing import Any, Self
 
-from mibig.errors import ValidationError, ValidationErrorInfo
+from .core import DomainInfo
 
 
-class Carrier:
-    subtype: str | None
+class Carrier(DomainInfo):
     beta_branching: bool | None
 
     VALID_SUBTYPES = (
@@ -12,24 +11,9 @@ class Carrier:
         "PCP",
     )
 
-    def __init__(self, subtype: str | None = None, beta_branching: bool | None = None, validate: bool = True, **kwargs) -> None:
-        self.subtype = subtype
+    def __init__(self, subtype: str | None = None, beta_branching: bool | None = None, **kwargs) -> None:
         self.beta_branching = beta_branching
-
-        if not validate:
-            return
-
-        errors = self.validate(**kwargs)
-        if errors:
-            raise ValidationError(errors)
-
-    def validate(self, **_) -> list[ValidationErrorInfo]:
-        errors = []
-
-        if self.subtype and self.subtype not in self.VALID_SUBTYPES:
-            errors.append(ValidationErrorInfo("Carrier.subtype", f"Invalid subtype: {self.subtype}"))
-
-        return errors
+        super().__init__(subtype=subtype, **kwargs)
 
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
@@ -40,10 +24,7 @@ class Carrier:
         )
 
     def to_json(self) -> dict[str, Any]:
-        ret: dict[str, Any] = {}
-        if self.subtype:
-            ret["subtype"] = self.subtype
-
+        ret = super().to_json()
         if self.beta_branching is not None:
             ret["beta_branching"] = self.beta_branching
 

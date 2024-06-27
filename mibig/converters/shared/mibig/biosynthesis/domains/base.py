@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Self, Union
 
 from mibig.converters.shared.common import GeneId, Location
@@ -10,6 +10,7 @@ from .aminotransferase import Aminotransferase
 from .branching import Branching
 from .carrier import Carrier
 from .condensation import Condensation
+from .core import DomainInfo
 from .cyclase import Cyclase
 from .dehydratase import Dehydratase
 from .enoylreductase import Enoylreductase
@@ -26,7 +27,7 @@ from .thioesterase import Thioesterase
 from .thioreductase import Thioreductase
 
 
-class DomainType(Enum):
+class DomainType(StrEnum):
     ACYLTRANSFERASE = "acyltransferase"
     ADENYLATION = "adenylation"
     AMINOTRANSFERASE = "aminotransferase"
@@ -50,28 +51,7 @@ class DomainType(Enum):
     THIOREDUCTASE = "thioreductase"
 
 
-ExtraInfo = Union[
-    Acyltransferase,
-    Adenylation,
-    Aminotransferase,
-    Branching,
-    Carrier,
-    Condensation,
-    Cyclase,
-    Dehydratase,
-    Enoylreductase,
-    Epimerase,
-    Hydroxylase,
-    Ketoreductase,
-    Ketosynthase,
-    Ligase,
-    Methyltransferase,
-    Other,
-    Oxidase,
-    ProductTemplate,
-    Thioesterase,
-    Thioreductase,
-]
+ExtraInfo = DomainInfo
 
 MAPPING: dict[DomainType, type[ExtraInfo]] = {
     DomainType.ACYLTRANSFERASE: Acyltransferase,

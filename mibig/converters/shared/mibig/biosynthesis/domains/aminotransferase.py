@@ -1,9 +1,12 @@
 from typing import Any, Self
 
 from mibig.converters.shared.common import Citation, QualityLevel, validate_citation_list
-from mibig.errors import ValidationError, ValidationErrorInfo
+from mibig.errors import ValidationErrorInfo
 
-class Aminotransferase:
+from .core import DomainInfo
+
+
+class Aminotransferase(DomainInfo):
     inactive: bool | None = None
     references: list[Citation]
 
@@ -11,18 +14,11 @@ class Aminotransferase:
             self,
             inactive: bool | None = None,
             references: list[Citation] | None = None,
-            validate: bool = True,
             **kwargs,
         ) -> None:
         self.inactive = inactive
         self.references = references or []
-
-        if not validate:
-            return
-
-        errors = self.validate(**kwargs)
-        if errors:
-            raise ValidationError(errors)
+        super().__init__(**kwargs)
 
     def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
@@ -41,7 +37,7 @@ class Aminotransferase:
         )
 
     def to_json(self) -> dict[str, Any]:
-        ret = {}
+        ret = super().to_json()
         if self.inactive is not None:
             ret["inactive"] = self.inactive
         if self.references:

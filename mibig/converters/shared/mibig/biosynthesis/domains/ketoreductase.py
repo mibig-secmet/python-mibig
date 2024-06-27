@@ -1,14 +1,14 @@
 from typing import Any, Self
 
 from mibig.converters.shared.common import QualityLevel
-from mibig.errors import ValidationError, ValidationErrorInfo
+from mibig.errors import ValidationErrorInfo
 from mibig.converters.shared.mibig.common import SubstrateEvidence
 
+from .core import ActiveDomain
 
-class Ketoreductase:
-    inactive: bool | None
+
+class Ketoreductase(ActiveDomain):
     stereochemistry: str | None
-    evidence: list[SubstrateEvidence] | None
 
     VALID_STEREOCHEMISTRY = (
         "A",
@@ -26,19 +26,10 @@ class Ketoreductase:
         inactive: bool | None = None,
         stereochemistry: str | None = None,
         evidence: list[SubstrateEvidence] | None = None,
-        validate: bool = True,
         **kwargs,
     ):
-        self.inactive = inactive
         self.stereochemistry = stereochemistry
-        self.evidence = evidence
-
-        if not validate:
-            return
-
-        errors = self.validate(**kwargs)
-        if errors:
-            raise ValidationError(errors)
+        super().__init__(active=None if inactive is None else not inactive, evidence=evidence, **kwargs)
 
     def validate(
         self, quality: QualityLevel | None = None, **kwargs
@@ -65,10 +56,6 @@ class Ketoreductase:
                     )
                 )
                 return errors
-
-            for ev in self.evidence:
-                errors.extend(ev.validate(**kwargs))
-
         return errors
 
     @classmethod
@@ -81,12 +68,10 @@ class Ketoreductase:
         )
 
     def to_json(self) -> dict[str, Any]:
-        ret: dict[str, Any] = {}
-        if self.inactive is not None:
-            ret["inactive"] = self.inactive
+        ret = super().to_json()
+        if self.active is not None:
+            ret["inactive"] = not ret.pop("active")
         if self.stereochemistry is not None:
             ret["stereochemistry"] = self.stereochemistry
-        if self.evidence:
-            ret["evidence"] = [e.to_json() for e in self.evidence]
 
         return ret

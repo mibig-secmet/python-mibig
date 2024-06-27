@@ -2,7 +2,9 @@ from typing import Any, Self
 
 from mibig.converters.shared.common import GeneId, QualityLevel, Smiles
 from mibig.converters.shared.mibig.common import SubstrateEvidence
-from mibig.errors import ValidationError, ValidationErrorInfo
+from mibig.errors import ValidationErrorInfo
+
+from .core import ActiveDomain, Substrate
 
 PROTEINOGENIC_SUBSTRATES = {
     "alanine": "NC(C)C(=O)O",
@@ -28,39 +30,24 @@ PROTEINOGENIC_SUBSTRATES = {
 }
 
 
-class AdenylationSubstrate:
-    name: str
+class AdenylationSubstrate(Substrate):
     proteinogenic: bool
-    structure: Smiles | None
 
     def __init__(
         self,
         name: str,
         proteinogenic: bool,
         structure: Smiles | None,
-        validate: bool = True,
+        **kwargs,
     ) -> None:
-        self.name = name
         self.proteinogenic = proteinogenic
-        self.structure = structure
+        super().__init__(name, structure, **kwargs)
 
         if self.proteinogenic and not self.structure:
             self.structure = Smiles(PROTEINOGENIC_SUBSTRATES[self.name.lower()])
 
-        if not validate:
-            return
-
-        errors = self.validate()
-        if errors:
-            raise ValidationError(errors)
-
-    def validate(self) -> list[ValidationErrorInfo]:
-        errors = []
-
-        if not self.name:
-            errors.append(
-                ValidationErrorInfo("AdenylationSubstrate.name", "Missing name")
-            )
+    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
+        errors = super().validate(**kwargs)
 
         if self.proteinogenic and self.name.lower() not in PROTEINOGENIC_SUBSTRATES:
             errors.append(
@@ -71,7 +58,7 @@ class AdenylationSubstrate:
             )
 
         if self.structure:
-            errors.extend(self.structure.validate())
+            errors.extend(self.structure.validate(**kwargs))
 
         return errors
 
@@ -84,23 +71,17 @@ class AdenylationSubstrate:
         )
 
     def to_json(self) -> dict[str, Any]:
-        ret = {
-            "name": self.name,
+        ret = super().to_json()
+        ret.update({
             "proteinogenic": self.proteinogenic,
-        }
-        if self.structure:
-            ret["structure"] = self.structure.to_json()
-
+        })
         return ret
-
-    def __str__(self) -> str:
-        return self.name
 
     def __repr__(self) -> str:
         return f"<AdenylationSubstrate {self.name}>"
 
 
-class Adenylation:
+class Adenylation(ActiveDomain):
     substrates: list[AdenylationSubstrate]
     evidence: list[SubstrateEvidence]
     precursor_biosynthesis: list[GeneId]
@@ -112,40 +93,25 @@ class Adenylation:
         evidence: list[SubstrateEvidence],
         precursor_biosynthesis: list[GeneId],
         inactive: bool | None = None,
-        validate: bool = True,
         **kwargs,
     ) -> None:
-        self.substrates = substrates
-        self.evidence = evidence
         self.precursor_biosynthesis = precursor_biosynthesis
-        self.inactive = inactive
 
-        if not validate:
-            return
-
-        errors = self.validate(**kwargs)
-        if errors:
-            raise ValidationError(errors)
+        super().__init__(active=None if inactive is None else not inactive, evidence=evidence,
+                         substrates=substrates, **kwargs)
 
     def validate(
         self, quality: QualityLevel | None = None, **kwargs
     ) -> list[ValidationErrorInfo]:
-        errors = []
-        for substrate in self.substrates:
-            errors.extend(substrate.validate(**kwargs))
-        for gene in self.precursor_biosynthesis:
-            errors.extend(gene.validate(**kwargs))
-        for ev in self.evidence:
-            errors.extend(ev.validate(quality=quality, **kwargs))
+        errors = super().validate(quality=quality, **kwargs)
         if self.substrates:
             if not self.evidence and quality != QualityLevel.QUESTIONABLE:
-                print(self.substrates)
                 errors.append(
                     ValidationErrorInfo(
                         "Adenylation.evidence", "Evidence is required for adenylation"
                     )
                 )
-        if self.inactive:
+        if self.active is False:
             if self.substrates:
                 errors.append(
                     ValidationErrorInfo(
@@ -180,16 +146,13 @@ class Adenylation:
         )
 
     def to_json(self) -> dict[str, Any]:
-        ret: dict[str, Any] = {}
-        if self.substrates:
-            ret["substrates"] = [sub.to_json() for sub in self.substrates]
-        if self.evidence:
-            ret["evidence"] = [ev.to_json() for ev in self.evidence]
+        ret = super().to_json()
         if self.precursor_biosynthesis:
             ret["precursor_biosynthesis"] = [
                 gene.to_json() for gene in self.precursor_biosynthesis
             ]
-        if self.inactive:
-            ret["inactive"] = self.inactive
+        if self.active is not None:
+            ret.pop("active")
+            ret["inactive"] = not self.active
 
         return ret

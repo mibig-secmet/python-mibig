@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Self
 
 from mibig.converters.shared.common import (
@@ -11,6 +11,7 @@ from mibig.converters.shared.mibig.biosynthesis.common import Monomer
 from mibig.errors import ValidationError, ValidationErrorInfo
 
 from .cal import CAL
+from .core import ModuleInfo
 from .nrps import NrpsTypeI
 from .other import Other
 from .pks import (
@@ -21,16 +22,7 @@ from .pks import (
     PksTransAtStarter,
 )
 
-ExtraInfo = (
-    CAL
-    | NrpsTypeI
-    | Other
-    | PksIterative
-    | PksModular
-    | PksTransAt
-    | PksModularStarter
-    | PksTransAtStarter
-)
+ExtraInfo = ModuleInfo
 
 
 class NcaEvidence:
@@ -160,7 +152,7 @@ class NonCanonicalActivity:
         return ret
 
 
-class ModuleType(Enum):
+class ModuleType(StrEnum):
     CAL = "cal"
     NRPS_TYPE1 = "nrps-type1"
     NRPS_TYPE6 = "nrps-type6"
@@ -245,6 +237,8 @@ class Module:
         references = set()
         for monomer in self.integrated_monomers:
             references.update(monomer.references)
+        for domain in self.extra_info.get_domains():
+            references.update(domain.references)
         return sorted(list(references))
 
     @classmethod
