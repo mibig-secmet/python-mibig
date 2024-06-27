@@ -188,6 +188,8 @@ class Biosynthesis:
         for operon in self.operons:
             for evidence in operon.evidence:
                 references.update(evidence.references)
+        for module in self.modules:
+            references.update(module.references)
         for path in self.paths:
             references.update(path.references)
         return sorted(list(references))

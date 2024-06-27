@@ -240,6 +240,13 @@ class Module:
 
         return errors
 
+    @property
+    def references(self) -> list[Citation]:
+        references = set()
+        for monomer in self.integrated_monomers:
+            references.update(monomer.references)
+        return sorted(list(references))
+
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         module_type = ModuleType(raw["type"])
