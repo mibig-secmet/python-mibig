@@ -1,3 +1,4 @@
+from functools import cached_property
 import re
 from typing import Any, Self
 
@@ -152,7 +153,10 @@ class MibigEntry:
 
         publications.update(self._legacy_references)
 
-        return sorted(list(publications))
+        result = sorted(publications)
+        for i, pub in enumerate(result):
+            pub.short_id = str(i + 1)
+        return result
 
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:

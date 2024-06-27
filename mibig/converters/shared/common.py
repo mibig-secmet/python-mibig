@@ -182,6 +182,8 @@ class GeneId(NovelGeneId):
         return errors
 
 
+_UNIQUE_CITATIONS = {}  # for single-instance tracking, making numerical identifiers easier to manage
+
 @total_ordering
 class Citation:
     VALID_PATTERNS = {
@@ -193,9 +195,17 @@ class Citation:
     database: str
     value: str
 
-    def __init__(self, database: str, value: str, validate: bool = True) -> None:
+    def __new__(cls, database: str, value: str, validate: bool = True, short_id: str = "") -> None:
+        instance = _UNIQUE_CITATIONS.get((database, value))
+        if not instance:
+            instance = super().__new__(cls)
+            _UNIQUE_CITATIONS[(database, value)] = instance
+        return instance
+
+    def __init__(self, database: str, value: str, validate: bool = True, short_id: str = "") -> None:
         self.database = database
         self.value = value
+        self.short_id = short_id
 
         if not validate:
             return
