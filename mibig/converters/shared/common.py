@@ -349,12 +349,12 @@ class ReleaseEntry:
         }
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         contributors = [SubmitterID.from_json(c) for c in raw.get("contributors", [])]
         reviewers = [SubmitterID.from_json(r) for r in raw.get("reviewers", [])]
         date = datetime.datetime.strptime(raw["date"], "%Y-%m-%d")
         comment = raw["comment"]
-        return cls(contributors, reviewers, date, comment)
+        return cls(contributors, reviewers, date, comment, **kwargs)
 
 
 class ReleaseVersion:
