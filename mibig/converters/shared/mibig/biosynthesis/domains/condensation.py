@@ -32,10 +32,11 @@ class Condensation:
 
         quality: QualityLevel | None = kwargs.get("quality")
 
-        if self.subtype and self.subtype not in self.VALID_SUBTYPES:
-            errors.append(ValidationErrorInfo("Condensation.subtype", f"Invalid subtype: {self.subtype}"))
+        if self.subtype:
+            if self.subtype not in self.VALID_SUBTYPES:
+                errors.append(ValidationErrorInfo("Condensation.subtype", f"Invalid subtype: {self.subtype}"))
+            errors.extend(validate_citation_list(self.references, "Condensation.references", quality=quality))
 
-        errors.extend(validate_citation_list(self.references, "Condensation.references", quality=quality))
         return errors
 
     @classmethod
