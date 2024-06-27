@@ -263,6 +263,9 @@ class Citation:
             return False
         return other.database == self.database and other.value == self.value
 
+    def __repr__(self) -> str:
+        return f"Citation({self.database=}, {self.value=}, {self.short_id=})"
+
 
 def validate_citation_list(
     citations: list[Citation],
