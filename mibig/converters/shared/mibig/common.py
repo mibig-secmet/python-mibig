@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, Self
 
-from mibig.converters.shared.common import Location, Citation, validate_citation_list, QualityLevel as QualityLevel
+from mibig.converters.shared.common import Location, Citation, validate_citation_list, QualityLevel
 from mibig.errors import ValidationError
 from mibig.utils import Record
 from mibig.validation import ValidationErrorInfo
