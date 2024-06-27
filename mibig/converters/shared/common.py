@@ -217,6 +217,19 @@ class Citation:
     def to_json(self) -> str:
         return f"{self.database}:{self.value}"
 
+    def to_url(self):
+        if not self.short_id:
+            raise
+        if self.database == "pubmed":
+            return f"https://www.ncbi.nlm.nih.gov/pubmed/{self.value}"
+        if self.database == "doi":
+            return f"https://dx.doi.org/{self.value}"
+        if self.database == "patent":
+            return f"https://patents.google.com/patent/{self.value}"
+        if self.database == "url":
+            return self.value
+        raise NotImplementedError(f"unhandled database type: {self.database}")
+
     @classmethod
     def from_json(cls, raw: str) -> Self:
         database, value = raw.split(":", 1)
