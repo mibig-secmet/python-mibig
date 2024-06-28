@@ -324,8 +324,13 @@ def convert_genes(v3_data: Everything, biosynthesis: Biosynthesis) -> Genes | No
 
             cat = v3_function.category
             if cat == "Unknown":
-                print(f"Function category for gene {gene_id} is 'Unknown', evidence: {v3_function.evidence}")
+                print(f"Function category for gene {gene_id} is 'Unknown', evidence: {v3_function.evidence}", file=sys.stderr)
                 continue
+            elif cat == "Other enzymatic":
+                print(f"Function category for gene {gene_id} is 'Other enzymatic', evidence: {v3_function.evidence}", file=sys.stderr)
+                continue
+            elif cat == "precursor":
+                cat = "Precursor"
 
             function = GeneFunction(
                 function=cat,
