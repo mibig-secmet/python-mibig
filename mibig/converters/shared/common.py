@@ -267,6 +267,57 @@ class Citation:
         return f"Citation({self.database=}, {self.value=}, {self.short_id=})"
 
 
+class Evidence:
+    method: str
+    references: list[Citation]
+
+    VALID_METHODS = {
+        "Sequence-based prediction",
+    }
+
+    def __init__(self, method: str, references: list[Citation], validate: bool = True, **kwargs) -> None:
+        self.method = method
+        self.references = list(set(references))
+
+        if not validate:
+            return
+
+        errors = self.validate(**kwargs)
+        if errors:
+            raise ValidationError(errors)
+
+    def validate(self, quality: QualityLevel | None = None) -> list[ValidationErrorInfo]:
+        errors: list[ValidationErrorInfo] = []
+
+        if self.method not in self.VALID_METHODS:
+            errors.append(
+                ValidationErrorInfo(
+                    f"{type(self)}.method", f"Invalid method {self.method!r}"
+                )
+            )
+
+        if self.method != "Sequence-based prediction":
+            errors.extend(validate_citation_list(self.references, f"{type(self)}.references", quality=quality))
+
+        return errors
+
+    def to_json(self) -> dict[str, Any]:
+        ret: dict[str, Any] = {
+            "method": self.method,
+        }
+
+        if self.references:
+            ret["references"] = [r.to_json() for r in self.references]
+
+        return ret
+
+    @classmethod
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
+        method = raw["method"]
+        references = [Citation.from_json(r) for r in raw.get("references", [])]
+        return cls(method, references, **kwargs)
+
+
 def validate_citation_list(
     citations: list[Citation],
     field: str | None = None,
