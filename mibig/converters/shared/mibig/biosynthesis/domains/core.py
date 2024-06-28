@@ -82,7 +82,7 @@ class DomainInfo:
         if self.references or self.evidence:
             errors.extend(validate_citation_list(self.references, f"{type(self)}.references", quality=quality))
         for evidence in self.evidence:
-            errors.extend(evidence.validate())
+            errors.extend(evidence.validate(quality=quality))
         for substrate in self.substrates:
             errors.extend(substrate.validate())
 
