@@ -54,7 +54,7 @@ class PksModularStarter:
         at_domain: Domain,
         carriers: list[Domain],
         modification_domains: list[Domain],
-        core_domains: list[Domain] = None,
+        core_domains: list[Domain] | None = None,
         **kwargs,
     ) -> None:
         self.at_domain = at_domain

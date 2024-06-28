@@ -10,7 +10,7 @@ class Substrate:
 
     VALID_NAMES = set()
 
-    def __init__(self, name: str, structure: Smiles = None, validate: bool = True, **kwargs) -> None:
+    def __init__(self, name: str, structure: Smiles | None = None, validate: bool = True, **kwargs) -> None:
         self.name = name
         self.structure = structure
 
@@ -45,14 +45,14 @@ class DomainInfo:
     evidence: list[Evidence]
     substrates: list[Substrate]
 
-    VALID_SUBTYPES: tuple[str] = tuple()
+    VALID_SUBTYPES: tuple[str, ...] = tuple()
 
     def __init__(
         self, *,
-        subtype: str = None,
-        references: list[Citation] = None,
-        evidence: list[Evidence] = None,
-        substrates: list[Substrate] = None,
+        subtype: str | None = None,
+        references: list[Citation] | None = None,
+        evidence: list[Evidence] | None = None,
+        substrates: list[Substrate] | None = None,
         validate: bool = True,
         **kwargs,
     ) -> None:
@@ -119,7 +119,7 @@ class DomainInfo:
 class ActiveDomain(DomainInfo):
     active: bool | None = None
 
-    def __init__(self, *, active: bool = None, **kwargs) -> None:
+    def __init__(self, *, active: bool | None = None, **kwargs) -> None:
         self.active = active
         super().__init__(**kwargs)
 
