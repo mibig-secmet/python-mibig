@@ -86,7 +86,7 @@ class Locus:
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         evidence: list[LocusEvidence] = [LocusEvidence.from_json(e, **kwargs) for e in raw["evidence"]]
-        return cls(raw["accession"], Location.from_json(raw["location"], **kwargs), evidence)
+        return cls(raw["accession"], Location.from_json(raw["location"], **kwargs), evidence, **kwargs)
 
     def to_json(self) -> dict[str, Any]:
         return {
