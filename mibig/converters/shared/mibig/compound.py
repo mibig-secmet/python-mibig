@@ -2,7 +2,7 @@ import re
 from typing import Any, Self
 
 from mibig.converters.shared.common import Citation, Smiles, validate_citation_list
-from mibig.converters.shared.mibig.common import QualityLevel
+from mibig.converters.shared.common import QualityLevel
 from mibig.errors import ValidationError
 from mibig.validation import ValidationErrorInfo
 

@@ -17,6 +17,7 @@ from mibig.converters.shared.common import (
     ReleaseEntry,
     ReleaseVersion,
     Smiles,
+    StatusLevel,
     SubmitterID,
 )
 from mibig.converters.shared.mibig import MibigEntry
@@ -105,7 +106,6 @@ from mibig.converters.shared.mibig.common import (
     Locus,
     LocusEvidence,
     QualityLevel,
-    StatusLevel,
     SubstrateEvidence,
     Taxonomy,
 )

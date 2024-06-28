@@ -1,4 +1,6 @@
-from mibig.errors import ValidationErrorInfo, validate_citation_list
+from mibig.converters.shared.common import validate_citation_list
+from mibig.errors import ValidationErrorInfo
+
 
 from .core import DomainInfo
 

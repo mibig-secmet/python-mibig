@@ -1,7 +1,6 @@
 from typing import Any, Self
 
-from mibig.converters.shared.common import Citation, GeneId, validate_citation_list
-from mibig.converters.shared.mibig.common import QualityLevel
+from mibig.converters.shared.common import Citation, GeneId, QualityLevel, validate_citation_list
 from mibig.converters.shared.mibig.biosynthesis.classes import BiosynthesisClass
 from mibig.converters.shared.mibig.biosynthesis.modules.base import Module
 from mibig.converters.shared.mibig.biosynthesis.path import Path

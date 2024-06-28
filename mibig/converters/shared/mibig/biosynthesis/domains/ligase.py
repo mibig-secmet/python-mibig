@@ -1,10 +1,9 @@
 from typing import Any, Self
 
-from mibig.converters.shared.common import QualityLevel, Smiles
+from mibig.converters.shared.common import Smiles
 from mibig.converters.shared.mibig.common import SubstrateEvidence
-from mibig.errors import ValidationErrorInfo
 
-from .core import DomainInfo
+from .core import DomainInfo, Substrate
 
 
 class Ligase(DomainInfo):
