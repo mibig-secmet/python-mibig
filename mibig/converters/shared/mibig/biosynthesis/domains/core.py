@@ -38,6 +38,22 @@ class Substrate:
     def __str__(self) -> str:
         return self.name
 
+    @classmethod
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
+        return cls(
+            name=raw["name"],
+            structure=Smiles(raw["structure"]) if "structure" in raw else None,
+            **kwargs,
+        )
+
+    def to_json(self) -> dict[str, Any]:
+        ret: dict[str, Any] = {
+            "name": self.name,
+        }
+        if self.structure:
+            ret["structure"] = self.structure.to_json()
+        return ret
+
 
 class DomainInfo:
     subtype: str | None
