@@ -415,7 +415,7 @@ class ReleaseEntry:
             errors.append(
                 ValidationErrorInfo("contributors", "contributor list cannot be empty")
             )
-        if quality != QualityLevel.QUESTIONABLE not self.reviewers:
+        if quality != QualityLevel.QUESTIONABLE and not self.reviewers:
             errors.append(
                 ValidationErrorInfo("reviewers", "reviewer list cannot be empty")
             )
