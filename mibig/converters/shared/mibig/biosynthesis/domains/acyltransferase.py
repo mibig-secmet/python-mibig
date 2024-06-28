@@ -89,7 +89,7 @@ class Acyltransferase(DomainInfo):
         self.substrates = substrates
         self.evidence = evidence
         self.inactive = inactive
-        super().__init__(self.subtype, **kwargs)
+        super().__init__(subtype=self.subtype, validate=validate, **kwargs)
 
     def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []

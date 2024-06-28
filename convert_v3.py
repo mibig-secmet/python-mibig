@@ -633,7 +633,7 @@ def convert_pks(
                         if v3_spec in ATSubstrate.VALID_NAMES:
                             spec = ATSubstrate(v3_spec, quality=quality)
                         else:
-                            spec = ATSubstrate("other", v3_spec, quality=quality)
+                            spec = ATSubstrate(name="other", details=v3_spec, quality=quality)
                         specificities.append(spec)
                     evidence = []
                     if v3_module.evidence:
@@ -886,7 +886,7 @@ def convert_nrps(
         subtype = None
         if v3_te.thioesterase_type != "Unknown":
             subtype = v3_te.thioesterase_type
-        te = Thioesterase(subtype)
+        te = Thioesterase(subtype=subtype)
         te_domain = Domain(
             DomainType.THIOESTERASE,
             GeneId(v3_te.gene),
@@ -1003,9 +1003,9 @@ def convert_nrps_modules(
         c_domain = None
         if v3_module.condensation_type:
             if v3_module.condensation_type == "Unknown":
-                c = Condensation(None, [], quality=quality)
+                c = Condensation(subtype=None, references=[], quality=quality)
             else:
-                c = Condensation(v3_module.condensation_type, [], quality=quality)
+                c = Condensation(subtype=v3_module.condensation_type, references=[], quality=quality)
             c_domain = Domain(
                 DomainType.CONDENSATION,
                 gene_id,
