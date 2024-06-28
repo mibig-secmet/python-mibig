@@ -1,7 +1,7 @@
 from enum import StrEnum
 from typing import Any, Self, Union
 
-from mibig.converters.shared.common import GeneId, Location
+from mibig.converters.shared.common import GeneId, Evidence, Location, Citation
 from mibig.errors import ValidationError, ValidationErrorInfo
 
 from .acyltransferase import Acyltransferase
@@ -10,7 +10,7 @@ from .aminotransferase import Aminotransferase
 from .branching import Branching
 from .carrier import Carrier
 from .condensation import Condensation
-from .core import DomainInfo
+from .core import DomainInfo, Substrate
 from .cyclase import Cyclase
 from .dehydratase import Dehydratase
 from .enoylreductase import Enoylreductase
@@ -104,6 +104,18 @@ class Domain:
         errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
+
+    @property
+    def evidence(self) -> list[Evidence]:
+        return self.extra_info.evidence
+
+    @property
+    def references(self) -> list[Citation]:
+        return self.extra_info.references
+
+    @property
+    def substrates(self) -> list[Substrate]:
+        return self.extra_info.substrates
 
     def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
