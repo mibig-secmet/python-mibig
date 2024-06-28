@@ -79,13 +79,13 @@ class Locus:
         errors.extend(self.location.validate(**kwargs))
 
         for evidence in self.evidence:
-            errors.extend(evidence.validate())
+            errors.extend(evidence.validate(**kwargs))
 
         return errors
 
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
-        evidence: list[LocusEvidence] = [LocusEvidence.from_json(e) for e in raw["evidence"]]
+        evidence: list[LocusEvidence] = [LocusEvidence.from_json(e, **kwargs) for e in raw["evidence"]]
         return cls(raw["accession"], Location.from_json(raw["location"], **kwargs), evidence)
 
     def to_json(self) -> dict[str, Any]:

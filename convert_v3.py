@@ -1075,6 +1075,7 @@ def convert_nrps_modules(
 
 
 def convert_loci(v3_data: Everything) -> list[Locus]:
+    quality = QualityLevel.QUESTIONABLE
     assert v3_data.cluster.loci
     begin = v3_data.cluster.loci.start or 0
     end = v3_data.cluster.loci.end or 0
@@ -1082,13 +1083,14 @@ def convert_loci(v3_data: Everything) -> list[Locus]:
     evidence = []
     if v3_data.cluster.loci.evidence:
         evidence = [
-            LocusEvidence(method=ev, references=[], quality=QualityLevel.QUESTIONABLE)
+            LocusEvidence(method=ev, references=[], quality=quality)
             for ev in v3_data.cluster.loci.evidence
         ]
     locus = Locus(
         accession=v3_data.cluster.loci.accession,
         location=loc,
         evidence=evidence,
+        quality=quality,
     )
     return [locus]
 
