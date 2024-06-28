@@ -1,49 +1,16 @@
 from typing import Any, Self
 
-from mibig.converters.shared.common import Citation, QualityLevel, validate_citation_list
+from mibig.converters.shared.common import Citation, Evidence, QualityLevel, validate_citation_list
 from mibig.errors import ValidationError, ValidationErrorInfo
 
 
-class FunctionEvidence:
-    method: str
-    references: list[Citation]
-
+class FunctionEvidence(Evidence):
     VALID_METHODS = (
         "Other in vivo study",
         "Heterologous expression",
         "Knock-out",
         "Activity assay"
     )
-
-    def __init__(self, method: str, references: list[Citation], validate: bool = True, **kwargs):
-        self.method = method
-        self.references = references
-
-        if not validate:
-            return
-
-        errors = self.validate(**kwargs)
-        if errors:
-            raise ValidationError(errors)
-
-    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
-        errors = []
-        quality: QualityLevel | None = kwargs.get("quality")
-        if self.method not in self.VALID_METHODS:
-            errors.append(ValidationErrorInfo("method", f"Invalid method: {self.method}"))
-        errors.extend(validate_citation_list(self.references, "FunctionEvidence.references", quality=quality))
-        return errors
-
-    @classmethod
-    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
-        return cls(
-            method=raw["method"],
-            references=[Citation.from_json(ref) for ref in raw["references"]],
-            **kwargs,
-        )
-
-    def to_json(self) -> dict[str, Any]:
-        return {"method": self.method, "references": [ref.to_json() for ref in self.references]}
 
 
 class MutationPhenotype:
@@ -179,4 +146,3 @@ class GeneFunction:
             publications.update(self.mutation_phenotype.references)
 
         return sorted(list(publications))
-

@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any, Self
 
-from mibig.converters.shared.common import Location, Citation, validate_citation_list, QualityLevel
+from mibig.converters.shared.common import Location, Citation, QualityLevel, Evidence
 from mibig.errors import ValidationError
 from mibig.utils import Record
 from mibig.validation import ValidationErrorInfo
@@ -13,7 +13,7 @@ class CompletenessLevel(Enum):
     COMPLETE = "complete"
 
 
-class SubstrateEvidence:
+class SubstrateEvidence(Evidence):
     VALID_METHODS = {
         "Activity assay",
         "ACVS assay",
@@ -33,55 +33,9 @@ class SubstrateEvidence:
         "Structure-based inference",
         "X-ray crystallography",
     }
-    method: str
-    references: list[Citation]
-
-    def __init__(
-        self, method: str, references: list[Citation], validate: bool = True, **kwargs,
-    ) -> None:
-        self.method = method
-        self.references = references
-
-        if not validate:
-            return
-
-        errors = self.validate(**kwargs)
-        if errors:
-            raise ValidationError(errors)
-
-    def validate(self, quality: QualityLevel | None = None) -> list[ValidationErrorInfo]:
-        errors: list[ValidationErrorInfo] = []
-
-        if self.method not in self.VALID_METHODS:
-            errors.append(
-                ValidationErrorInfo(
-                    "SubstrateEvidence.method", f"Invalid method {self.method!r}"
-                )
-            )
-
-        if self.method != "Sequence-based prediction":
-            errors.extend(validate_citation_list(self.references, "SubstrateEvidence.references", quality=quality))
-
-        return errors
-
-    def to_json(self) -> dict[str, Any]:
-        ret: dict[str, Any] = {
-            "method": self.method,
-        }
-
-        if self.references:
-            ret["references"] = [r.to_json() for r in self.references]
-
-        return ret
-
-    @classmethod
-    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
-        method = raw["method"]
-        references = [Citation.from_json(r) for r in raw.get("references", [])]
-        return cls(method, references, **kwargs)
 
 
-class LocusEvidence:
+class LocusEvidence(Evidence):
     VALID_METHODS = {
         "Homology-based prediction",
         "Correlation of genomic and metabolomic data",
@@ -91,44 +45,6 @@ class LocusEvidence:
         "Heterologous expression",
         "In vitro expression",
     }
-    method: str
-    references: list[Citation]
-
-    def __init__(self, method: str, references: list[Citation], validate: bool = True, **kwargs) -> None:
-        self.method = method
-        self.references = references
-
-        if not validate:
-            return
-
-        errors = self.validate(**kwargs)
-        if errors:
-            raise ValidationError(errors)
-
-    def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
-        errors: list[ValidationErrorInfo] = []
-        if self.method not in self.VALID_METHODS:
-            errors.append(ValidationErrorInfo("LocationEvidence.method", f"Invalid method {self.method}"))
-
-        if quality and quality is not QualityLevel.QUESTIONABLE:
-            if not self.references:
-                errors.append(ValidationErrorInfo("LocationEvidence.references", "References are required for non-questionable entries"))
-
-        for citation in self.references:
-            errors.extend(citation.validate())
-
-        return errors
-
-    @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
-        refs: list[Citation] = [Citation.from_json(c) for c in raw["references"]]
-        return cls(raw["method"], refs)
-
-    def to_json(self) -> dict[str, Any]:
-        return {
-            "method": self.method,
-            "references": [r.to_json() for r in self.references]
-        }
 
 
 class Locus:

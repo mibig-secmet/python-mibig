@@ -3,9 +3,9 @@ from typing import Any, Self
 
 from mibig.converters.shared.common import (
     Citation,
+    Evidence,
     GeneId,
     QualityLevel,
-    validate_citation_list,
 )
 from mibig.converters.shared.mibig.biosynthesis.common import Monomer
 from mibig.errors import ValidationError, ValidationErrorInfo
@@ -25,63 +25,12 @@ from .pks import (
 ExtraInfo = ModuleInfo
 
 
-class NcaEvidence:
-    method: str
-    references: list[Citation]
-
+class NcaEvidence(Evidence):
     VALID_METHODS = (
         "Sequence-based prediction",
         "Structure-based inference",
         "Activity assay",
     )
-
-    def __init__(
-        self,
-        method: str,
-        references: list[Citation],
-        validate: bool = True,
-        **kwargs,
-    ) -> None:
-        self.method = method
-        self.references = references
-
-        if not validate:
-            return
-
-        errors = self.validate(**kwargs)
-        if errors:
-            raise ValidationError(errors)
-
-    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
-        errors = []
-
-        quality: QualityLevel | None = kwargs.get("quality")
-
-        if self.method not in self.VALID_METHODS:
-            errors.append(
-                ValidationErrorInfo(
-                    "NcaEvidence.method", f"Invalid method {self.method}"
-                )
-            )
-
-        errors.extend(
-            validate_citation_list(
-                self.references, "NcaEvidence.references", quality=quality
-            )
-        )
-
-        return errors
-
-    @classmethod
-    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
-        refs = [Citation.from_json(c) for c in raw["references"]]
-        return cls(raw["method"], refs, **kwargs)
-
-    def to_json(self) -> dict[str, Any]:
-        return {
-            "method": self.method,
-            "references": [r.to_json() for r in self.references],
-        }
 
 
 class NonCanonicalActivity:
