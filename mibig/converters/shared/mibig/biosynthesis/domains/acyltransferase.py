@@ -26,8 +26,8 @@ class ATSubstrate(Substrate):
         structure: Smiles | None = None,
         **kwargs,
     ) -> None:
-        super().__init__(name, structure, **kwargs)
         self.details = details
+        super().__init__(name, structure, **kwargs)
 
     def validate(self, quality: QualityLevel | None = None, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
