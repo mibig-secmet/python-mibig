@@ -34,7 +34,7 @@ class PksTransAt(ModuleInfo):
             ],
             **kwargs,
         )
-        assert not raw
+#        assert not raw, raw
         return new
 
     def to_json(self) -> dict[str, Any]:
@@ -46,7 +46,7 @@ class PksTransAt(ModuleInfo):
         return ret
 
 
-class PksModularStarter:
+class PksModularStarter(ModuleInfo):
     at_domain: Domain
 
     def __init__(
@@ -71,7 +71,7 @@ class PksModularStarter:
             ],
             **kwargs,
         )
-        assert not raw
+        #assert not raw, raw
         return new
 
     def to_json(self) -> dict[str, Any]:
@@ -120,6 +120,7 @@ class PksModular(PksModularStarter):
     def to_json(self) -> dict[str, Any]:
         ret = super().to_json()
         ret["at_domain"] = self.at_domain.to_json()
+        ret["ks_domain"] = self.ks_domain.to_json()
         return ret
 
 

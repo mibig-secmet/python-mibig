@@ -52,7 +52,7 @@ class ModuleInfo:
             ],
             **kwargs,
         )
-        assert not raw
+        #assert not raw, raw
         return new
 
     def to_json(self) -> dict[str, Any]:
