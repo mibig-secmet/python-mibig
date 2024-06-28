@@ -1100,6 +1100,7 @@ REVIEW_MESSAGES = {
     "Changes reviewed and approved",
     "Entry reviewed and approved.",
     "Reviewed changes and approved.",
+    "Reviewed cahnges and approved.",
 }
 
 
@@ -1131,6 +1132,8 @@ def convert_changelog(v3_data: Everything) -> ChangeLog:
                     del entry.contributors[i]
                     continue
                 i += 1
+            if not reviewers:
+                reviewers = [mibig_user]
             for c, m, ts in zip(entry.contributors, entry.comments, entry.timestamps):
                 ts = ts.split("T")[0]
                 r_date = date.fromisoformat(ts)
