@@ -547,7 +547,7 @@ class Release:
         )
         entries = [ReleaseEntry.from_json(e, **kwargs) for e in raw["entries"]]
 
-        return cls(version, date, entries)
+        return cls(version, date, entries, **kwargs)
 
 
 class ChangeLog:
@@ -580,7 +580,7 @@ class ChangeLog:
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         releases = [Release.from_json(r, **kwargs) for r in raw["releases"]]
-        return cls(releases)
+        return cls(releases, **kwargs)
 
 
 class Smiles:
