@@ -96,7 +96,8 @@ class DomainInfo:
         if self.subtype and self.VALID_SUBTYPES and self.subtype not in self.VALID_SUBTYPES:
             errors.append(ValidationErrorInfo(f"{type(self)}.subtype", "invalid subtype"))
         if self.references or self.evidence:
-            errors.extend(validate_citation_list(self.references, f"{type(self)}.references", quality=quality))
+            if not self.references and {ev.method for ev in self.evidence} != {"Sequence-based prediction"}:
+                errors.extend(validate_citation_list(self.references, f"{type(self)}.references", quality=quality))
         for evidence in self.evidence:
             errors.extend(evidence.validate(quality=quality))
         for substrate in self.substrates:
