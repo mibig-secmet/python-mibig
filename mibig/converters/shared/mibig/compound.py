@@ -270,7 +270,7 @@ class Evidence:
         return {"method": self.method, "references": [r.to_json() for r in self.references]}
 
 
-VALID_NAME_PATTERN = r"^[a-zA-Zα-ωΑ-Ω0-9\[\]'()\/&,. +-]+$"
+VALID_NAME_PATTERN = r"^[a-zA-Zα-ωΑ-Ω0-9\[\]\{\}'()\/&,. +-:;]+$"
 
 class CompoundRef:
     database: str
