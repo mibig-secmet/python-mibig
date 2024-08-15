@@ -88,12 +88,15 @@ class Operon:
 
     def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
+        quality: QualityLevel = kwargs.get("quality", QualityLevel.QUESTIONABLE)
 
         for gene in self.genes:
             errors.extend(gene.validate(**kwargs))
 
         for evidence in self.evidence:
             errors.extend(evidence.validate(**kwargs))
+        if quality >= QualityLevel.LOW and not self.evidence:
+            errors.append(ValidationErrorInfo("Operon", f"evidence needed at quality level {quality.value}"))
 
         return errors
 
