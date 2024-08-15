@@ -44,6 +44,7 @@ class LocusEvidence(Evidence):
         "Enzymatic assays",
         "Heterologous expression",
         "In vitro expression",
+        "Synthetic-bioinformatic natural product (syn-BNP)",
     }
 
 
