@@ -480,6 +480,9 @@ class Compound:
 
         if self.structure is not None:
             errors.extend(self.structure.validate())
+        else:
+            if quality and quality is QualityLevel.HIGH:
+                errors.append(ValidationErrorInfo("Compound", "Structure is needed for high quality compound entries"))
 
         for synonym in self.synonyms:
             if not re.match(VALID_NAME_PATTERN, synonym):
