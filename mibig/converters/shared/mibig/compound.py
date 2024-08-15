@@ -232,6 +232,7 @@ class Evidence:
         "X-ray crystallography",
         "Chemical derivatisation",
         "Total synthesis",
+        "Experimental values match with authentic standard",
     )
 
     def __init__(self, method: str, references: list[Citation], validate: bool = True, **kwargs) -> None:
