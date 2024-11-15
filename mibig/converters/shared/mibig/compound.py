@@ -48,7 +48,7 @@ class Bioactivity:
     assays: list[Assay] | None
 
     def __init__(self, name: str, observed: bool, references: list[Citation],
-                 assays: list[Assay] | None = None, validate: bool = True) -> None:
+                 assays: list[Assay] | None = None, validate: bool = True, **kwargs) -> None:
         self.name = name
         self.observed = observed
         self.references = references
@@ -57,20 +57,20 @@ class Bioactivity:
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, quality: QualityLevel = QualityLevel.QUESTIONABLE) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
 
         if not self.name:
             errors.append(ValidationErrorInfo("Bioactivity", "Missing name"))
 
-        if not self.references:
+        if quality > QualityLevel.QUESTIONABLE and not self.references:
             errors.append(ValidationErrorInfo("Bioactivity", "Missing references"))
 
-        errors.extend(validate_citation_list(self.references))
+        errors.extend(validate_citation_list(self.references, quality=quality))
 
         if not self.assays:
             return errors
@@ -81,12 +81,13 @@ class Bioactivity:
         return errors
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             raw["name"],
             raw["observed"],
             [Citation.from_json(c) for c in raw["references"]],
             assays=[Assay.from_json(a) for a in raw.get("assays", [])],
+            **kwargs
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -459,13 +460,13 @@ class Compound:
         if errors:
             raise ValidationError(errors)
 
-    def validate(self, quality: QualityLevel | None = None) -> list[ValidationErrorInfo]:
+    def validate(self, quality: QualityLevel = QualityLevel.QUESTIONABLE) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
 
         if not re.match(VALID_NAME_PATTERN, self.name):
             errors.append(ValidationErrorInfo("Compound", f"Invalid name {self.name!r}"))
 
-        if quality and quality is not QualityLevel.QUESTIONABLE:
+        if quality is not QualityLevel.QUESTIONABLE:
             if not self.evidence:
                 errors.append(ValidationErrorInfo("Compound", "Missing evidence"))
 
@@ -476,7 +477,7 @@ class Compound:
             errors.extend(compound_class.validate())
 
         for bioactivity in self.bioactivities:
-            errors.extend(bioactivity.validate())
+            errors.extend(bioactivity.validate(quality=quality))
 
         if self.structure is not None:
             errors.extend(self.structure.validate())
