@@ -8,7 +8,6 @@ from .core import DomainInfo
 
 class Aminotransferase(DomainInfo):
     inactive: bool | None = None
-    references: list[Citation]
 
     def __init__(
             self,
@@ -17,8 +16,7 @@ class Aminotransferase(DomainInfo):
             **kwargs,
         ) -> None:
         self.inactive = inactive
-        self.references = references or []
-        super().__init__(**kwargs)
+        super().__init__(references=references, **kwargs)
 
     def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
