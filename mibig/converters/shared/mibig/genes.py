@@ -190,6 +190,7 @@ class TailoringFunction:
         "Phosphorylation",
         "Prenylation",
         "Reduction",
+        "Ring contraction",
         "Sulfation",
         "Other",
     )
