@@ -337,7 +337,7 @@ class Annotation:
             product=raw.get("product"),
             functions=[GeneFunction.from_json(f, **kwargs) for f in raw.get("functions", [])],
             tailoring_functions=[
-                TailoringFunction.from_json(f, **kwargs) for f in raw.get("tailoring_functions", [])
+                TailoringFunction.from_json(f, **kwargs) for f in raw.get("tailoring", [])
             ],
             domains=[Domain.from_json(d, **kwargs) for d in raw.get("domains", [])],
             mutation_phenotype=MutationPhenotype.from_json(raw["mutation_phenotype"], **kwargs) if "mutation_phenotype" in raw else None,
@@ -356,7 +356,7 @@ class Annotation:
         if self.functions:
             ret["functions"] = [f.to_json() for f in self.functions]
         if self.tailoring_functions:
-            ret["tailoring_functions"] = [f.to_json() for f in self.tailoring_functions]
+            ret["tailoring"] = [f.to_json() for f in self.tailoring_functions]
         if self.domains:
             ret["domains"] = [d.to_json() for d in self.domains]
         if self.mutation_phenotype:
