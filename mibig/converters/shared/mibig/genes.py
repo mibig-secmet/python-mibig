@@ -184,6 +184,7 @@ class TailoringFunction:
         "Hydrolysis",
         "Hydroxylation",
         "Lasso macrolactam formation",
+        "Macrolactam formation",
         "Methylation",
         "Monooxygenation",
         "Oxidation",
