@@ -195,7 +195,7 @@ _UNIQUE_CITATIONS = {}  # for single-instance tracking, making numerical identif
 class Citation:
     VALID_PATTERNS = {
         "pubmed": r"^(\d+)$",
-        "doi": r"^10\.\d{4,9}/[-\._;()/:a-zA-Z0-9]+$",
+        "doi": r"^10\.\d{4,9}/[-\._;()<>/:a-zA-Z0-9]+$",
         "patent": r"^(.+)$",
         "url": r"^https?:\/\/(www\\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$",
     }

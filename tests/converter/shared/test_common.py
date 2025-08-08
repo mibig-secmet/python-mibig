@@ -10,6 +10,7 @@ class TestCitation(unittest.TestCase):
         for database, value in (
             ("pubmed", "12345"),
             ("doi", "10.12345/t0tally-valid_DOI(here)"),
+            ("doi", "10.1002/1521-3773(20011217)40:24<4688::AID-ANIE4688>3.0.CO;2-M"),
             ("patent", "whatver"),
             ("url", "https://example.com/link_here.html"),
         ):
