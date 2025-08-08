@@ -52,12 +52,12 @@ class TestSubmitterId(unittest.TestCase):
             common.SubmitterID("Bob")
 
     def test_validate(self):
-        submitter = common.SubmitterID("Bob", validate=False)
+        submitter = common.SubmitterID("Bob", _validate=False)
         errors = submitter.validate()
         assert errors
         assert errors[0].message == "invalid length"
 
-        submitter = common.SubmitterID("AAAAAAAAAAAAAAAAAAAAAAA%", validate=False)
+        submitter = common.SubmitterID("AAAAAAAAAAAAAAAAAAAAAAA%", _validate=False)
         errors = submitter.validate()
         assert errors
         assert errors[0].message == "invalid characters"
@@ -106,6 +106,7 @@ class TestReleaseEntry(unittest.TestCase):
             [],
             date.today(),
             "Test comment",
+            quality=common.QualityLevel.QUESTIONABLE
         )
 
 
