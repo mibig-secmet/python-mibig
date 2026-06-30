@@ -12,7 +12,12 @@ class Monomer:
     structure: Smiles
     references: list[Citation]
 
-    def __init__(self, name: str, structure: Smiles, references: list[Citation], validate: bool = True):
+    def __init__(self,
+                 name: str,
+                 structure: Smiles,
+                 references: list[Citation],
+                 validate: bool = True,
+                 **kwargs):
         self.name = name
         self.structure = structure
         self.references = references
@@ -20,17 +25,18 @@ class Monomer:
         if not validate:
             return
 
-        errors = self.validate()
+        errors = self.validate(**kwargs)
         if errors:
             raise ValidationError(errors)
 
-    def validate(self) -> list[ValidationErrorInfo]:
+    def validate(self, **kwargs) -> list[ValidationErrorInfo]:
         errors = []
+        quality: QualityLevel | None = kwargs.get("quality")
 
         if not re.match(VALID_NAME_PATTERN, self.name):
             errors.append(ValidationErrorInfo("Monomer.name", f"Invalid name: {self.name}"))
 
-        errors.extend(validate_citation_list(self.references))
+        errors.extend(validate_citation_list(self.references, quality=quality))
         errors.extend(self.structure.validate())
         return errors
 

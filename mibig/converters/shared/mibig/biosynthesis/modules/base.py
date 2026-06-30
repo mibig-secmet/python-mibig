@@ -171,7 +171,7 @@ class Module:
         errors.extend(self.extra_info.validate(**kwargs))
 
         for monomer in self.integrated_monomers:
-            errors.extend(monomer.validate())
+            errors.extend(monomer.validate(**kwargs))
 
         for gene in self.genes:
             errors.extend(gene.validate(record=kwargs.get("record")))
