@@ -138,7 +138,7 @@ class Acyltransferase(DomainInfo):
         subtype = raw.get("subtype")
         return cls(
             subtype=subtype,
-            substrates=[ATSubstrate.from_json(sub, **kwargs) for sub in raw["substrates"]],
+            substrates=[ATSubstrate.from_json(sub, **kwargs) for sub in raw.get("substrates", [])],
             evidence=[SubstrateEvidence.from_json(ev, **kwargs) for ev in raw["evidence"]],
             inactive=raw.get("inactive"),
             **kwargs,
@@ -146,10 +146,9 @@ class Acyltransferase(DomainInfo):
 
     def to_json(self) -> dict[str, Any]:
         ret = super().to_json()
-        ret.update({
-            "substrates": [sub.to_json() for sub in self.substrates],
-            "evidence": [ev.to_json() for ev in self.evidence],
-        })
+        ret["evidence"] = [ev.to_json() for ev in self.evidence],
+        if self.substrates:
+            ret["substrates"] = [sub.to_json() for sub in self.substrates]
         if self.inactive:
             ret["inactive"] = self.inactive
         return ret
