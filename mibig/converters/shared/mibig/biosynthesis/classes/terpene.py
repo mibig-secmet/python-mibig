@@ -80,12 +80,14 @@ class Terpene:
 
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
+        synthases = [GeneId.from_json(s, **kwargs) for s in raw.get("synthases", [])]
+        synthases.extend([GeneId.from_json(s, **kwargs) for s in raw.get("synthases_cyclases", [])])
         return cls(
             subclass=raw["subclass"],
             prenyltransferases=[
                 GeneId.from_json(p, **kwargs) for p in raw.get("prenyltransferases", [])
             ],
-            synthases=[GeneId.from_json(s, **kwargs) for s in raw.get("synthases", [])],
+            synthases=synthases,
             precursor=raw.get("precursor"),
             **kwargs,
         )
