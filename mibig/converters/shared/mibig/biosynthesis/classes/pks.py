@@ -62,7 +62,7 @@ class PKS:
             errors.extend(cyclase.validate(**kwargs))
 
         if self.starter_unit:
-            errors.extend(self.starter_unit.validate())
+            errors.extend(self.starter_unit.validate(quality=quality))
 
         if self.ketide_length and self.ketide_length < 1:
             errors.append(
@@ -78,7 +78,7 @@ class PKS:
         return cls(
             subclass=raw["subclass"],
             cyclases=[GeneId.from_json(c, **kwargs) for c in raw.get("cyclases", [])],
-            starter_unit=Monomer.from_json(raw["starter_unit"])
+            starter_unit=Monomer.from_json(raw["starter_unit"], **kwargs)
             if "starter_unit" in raw
             else None,
             ketide_length=raw.get("ketide_length"),

@@ -41,11 +41,12 @@ class Monomer:
         return errors
 
     @classmethod
-    def from_json(cls, raw: dict[str, Any]) -> Self:
+    def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
         return cls(
             name=raw["name"],
             structure=Smiles(raw["structure"]),
             references=[Citation.from_json(ref) for ref in raw["references"]],
+            **kwargs,
         )
 
     def to_json(self) -> dict[str, Any]:

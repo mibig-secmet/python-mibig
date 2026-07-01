@@ -206,7 +206,7 @@ class Module:
             extra_info=extra_info,
             comment=raw.get("comment"),
             integrated_monomers=[
-                Monomer.from_json(monomer)
+                Monomer.from_json(monomer, **kwargs)
                 for monomer in raw.get("integrated_monomers", [])
             ],
             non_canonical_activity=nc_activity,
