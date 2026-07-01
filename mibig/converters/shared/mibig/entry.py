@@ -180,7 +180,7 @@ class MibigEntry:
 
         return cls(
             raw["accession"],
-            raw["version"],
+            int(raw["version"]),
             changelog,
             quality,
             status,
