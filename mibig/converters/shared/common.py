@@ -599,7 +599,7 @@ class Smiles:
     def validate(self) -> list[ValidationErrorInfo]:
         errors: list[ValidationErrorInfo] = []
 
-        if not re.match(r"^[\[\]a-zA-Z0-9\@()=\/\\#+.%*-]+$", self.value):
+        if not re.match(r"^[\[\]a-zA-Z0-9\@()=\/\\#+.%*-:]+$", self.value):
             errors.append(
                 ValidationErrorInfo("Smiles", f"Invalid value {self.value!r}")
             )
