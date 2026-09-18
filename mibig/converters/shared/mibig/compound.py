@@ -224,6 +224,7 @@ class CompoundClass:
 
 class Evidence:
     method: str
+    details: str | None
     references: list[Citation]
 
     VALID_METHODS = (
@@ -234,10 +235,12 @@ class Evidence:
         "Chemical derivatisation",
         "Total synthesis",
         "Experimental values match with authentic standard",
+        "Other",
     )
 
-    def __init__(self, method: str, references: list[Citation], validate: bool = True, **kwargs) -> None:
+    def __init__(self, method: str, references: list[Citation], validate: bool = True, details: str | None = None, **kwargs) -> None:
         self.method = method
+        self.details = details
         self.references = references
 
         if not validate:
@@ -259,16 +262,27 @@ class Evidence:
                 )
             )
 
+        if self.method == "Other" and not self.details:
+            errors.append(
+                ValidationErrorInfo(
+                    message="Missing details for method 'Other'",
+                    field="compound.evidence.details",
+                )
+            )
+
         errors.extend(validate_citation_list(self.references, "Compound.evidence", quality=quality))
 
         return errors
 
     @classmethod
     def from_json(cls, raw: dict[str, Any], **kwargs) -> Self:
-        return cls(raw["method"], [Citation.from_json(c) for c in raw["references"]], **kwargs)
+        return cls(raw["method"], [Citation.from_json(c) for c in raw["references"]], details=raw.get("details"), **kwargs)
 
     def to_json(self) -> dict[str, Any]:
-        return {"method": self.method, "references": [r.to_json() for r in self.references]}
+        ret = {"method": self.method, "references": [r.to_json() for r in self.references]}
+        if self.details is not None:
+            ret["details"] = self.details
+        return ret
 
 
 VALID_NAME_PATTERN = r"^[a-zA-Zα-ωΑ-Ω0-9\[\]\{\}'()\/&,. +-:;]+$"
